@@ -4,6 +4,7 @@ import 'package:lowgo_cab/views/home_page.dart';
 import 'package:lowgo_cab/views/packages_page.dart';
 import 'package:lowgo_cab/views/about_page.dart';
 import 'package:lowgo_cab/views/contact_page.dart';
+import 'package:lowgo_cab/views/booking_page.dart';
 import 'package:lowgo_cab/widgets/responsive_layout.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
@@ -35,7 +36,7 @@ class CustomHeader extends StatelessWidget implements PreferredSizeWidget {
                       const Icon(Icons.email, color: Colors.white, size: 16),
                       const SizedBox(width: 8),
                       const Text(
-                        'support@lowgocab.com',
+                        AppConstants.contactEmail,
                         style: TextStyle(color: Colors.white, fontSize: 12),
                       ),
                       if (!isMobile) ...[
@@ -43,7 +44,7 @@ class CustomHeader extends StatelessWidget implements PreferredSizeWidget {
                         const Icon(Icons.phone, color: Colors.white, size: 16),
                         const SizedBox(width: 8),
                         const Text(
-                          '+91 98765 43210',
+                          AppConstants.whatsappNumber,
                           style: TextStyle(color: Colors.white, fontSize: 12),
                         ),
                       ],
@@ -79,24 +80,29 @@ class CustomHeader extends StatelessWidget implements PreferredSizeWidget {
                       MaterialPageRoute(builder: (context) => const HomePage()),
                       (route) => false,
                     ),
-                    child: Row(
-                      children: [
-                        const Icon(
-                          Icons.local_taxi,
-                          size: 32,
-                          color: AppConstants.primaryColor,
-                        ),
-                        const SizedBox(width: 10),
-                        Text(
-                          'LOWGO CAB',
-                          style: TextStyle(
-                            fontSize: isMobile ? 20 : 26,
-                            fontWeight: FontWeight.w900,
-                            color: AppConstants.secondaryColor,
-                            letterSpacing: 1.5,
+                    child: Image.asset(
+                      'assets/logo.png',
+                      height: isMobile ? 45 : 55,
+                      fit: BoxFit.contain,
+                      errorBuilder: (context, error, stackTrace) => Row(
+                        children: [
+                          const Icon(
+                            Icons.local_taxi,
+                            size: 32,
+                            color: AppConstants.primaryColor,
                           ),
-                        ),
-                      ],
+                          const SizedBox(width: 10),
+                          Text(
+                            'LOWGO CAB',
+                            style: TextStyle(
+                              fontSize: isMobile ? 20 : 26,
+                              fontWeight: FontWeight.w900,
+                              color: AppConstants.secondaryColor,
+                              letterSpacing: 1.5,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
 
@@ -117,7 +123,12 @@ class CustomHeader extends StatelessWidget implements PreferredSizeWidget {
                         ),
                         const SizedBox(width: 12),
                         ElevatedButton(
-                          onPressed: () {},
+                          onPressed: () => Navigator.pushReplacement(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const BookingPage(),
+                            ),
+                          ),
                           style: ElevatedButton.styleFrom(
                             backgroundColor: AppConstants.primaryColor,
                             padding: const EdgeInsets.symmetric(
@@ -158,7 +169,7 @@ class CustomHeader extends StatelessWidget implements PreferredSizeWidget {
 
   Widget _buildNavLink(BuildContext context, String title, Widget page) {
     return TextButton(
-      onPressed: () => Navigator.push(
+      onPressed: () => Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (context) => page),
       ),

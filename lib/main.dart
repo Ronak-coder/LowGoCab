@@ -1,9 +1,21 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:lowgo_cab/utils/constants.dart';
 import 'package:lowgo_cab/views/home_page.dart';
 import 'package:responsive_framework/responsive_framework.dart';
+import 'package:lowgo_cab/firebase_options.dart';
 
-void main() {
+void main() async {
+  try {
+    WidgetsFlutterBinding.ensureInitialized();
+    print('DEBUG: Initializing Firebase...');
+    await Firebase.initializeApp(
+      options: DefaultFirebaseOptions.currentPlatform,
+    );
+    print('DEBUG: Firebase Initialized successfully.');
+  } catch (e) {
+    print('DEBUG: Firebase Init Error: $e');
+  }
   runApp(const LowGoCabApp());
 }
 

@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "625974158620",
+    "project_id": "lowgocab-2026",
+    "storage_bucket": "lowgocab-2026.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:625974158620:android:07b9db0ba0242e4f0706d9",
+        "android_client_info": {
+          "package_name": "com.example.lowgo_cab"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD7Xe2U5ROB8G7sZAaW4nfBa7nM9gEw8C8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

@@ -1,16 +1,1 @@
-{
-  "hosting": {
-    "public": "build/web",
-    "ignore": [
-      "firebase.json",
-      "**/.*",
-      "**/node_modules/**"
-    ],
-    "rewrites": [
-      {
-        "source": "**",
-        "destination": "/index.html"
-      }
-    ]
-  }
-}
+{"hosting":{"public":"build/web","ignore":["firebase.json","**/.*","**/node_modules/**"],"rewrites":[{"source":"**","destination":"/index.html"}]},"firestore":{"rules":"firestore.rules"},"flutter":{"platforms":{"android":{"default":{"projectId":"lowgocab-2026","appId":"1:625974158620:android:07b9db0ba0242e4f0706d9","fileOutput":"android/app/google-services.json"}},"dart":{"lib/firebase_options.dart":{"projectId":"lowgocab-2026","configurations":{"android":"1:625974158620:android:07b9db0ba0242e4f0706d9","ios":"1:625974158620:ios:b853c4bf1d0023190706d9","web":"1:625974158620:web:009276cc9845995e0706d9"}}}}}}

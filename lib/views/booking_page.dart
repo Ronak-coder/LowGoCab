@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:lowgo_cab/models/booking_model.dart';
-import 'package:lowgo_cab/services/whatsapp_service.dart';
 import 'package:lowgo_cab/utils/constants.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:lowgo_cab/widgets/custom_header.dart';
+import 'package:lowgo_cab/models/booking_model.dart';
+import 'package:lowgo_cab/services/contact_service.dart';
 import 'package:lowgo_cab/widgets/responsive_layout.dart';
+import 'package:lowgo_cab/widgets/custom_header.dart';
+import 'package:lowgo_cab/widgets/custom_footer.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
 class BookingPage extends StatefulWidget {
   final String? selectedPackage;
@@ -20,7 +21,8 @@ class _BookingPageState extends State<BookingPage> {
   final _mobileController = TextEditingController();
   final _fromController = TextEditingController();
   final _toController = TextEditingController();
-  int _numberOfPersons = 1;
+  int _persons = 1;
+  bool _isSubmitting = false;
 
   @override
   void dispose() {
@@ -31,106 +33,145 @@ class _BookingPageState extends State<BookingPage> {
     super.dispose();
   }
 
-  void _submitBooking() {
+  Future<void> _handleSubmission(bool isEmail) async {
     if (_formKey.currentState!.validate()) {
+      setState(() => _isSubmitting = true);
+
       final booking = Booking(
         name: _nameController.text,
         mobile: _mobileController.text,
         fromLocation: _fromController.text,
         toLocation: _toController.text,
-        numberOfPersons: _numberOfPersons,
-        packageSelected: widget.selectedPackage,
+        numberOfPersons: _persons,
+        packageSelected: widget.selectedPackage ?? 'General Inquiry',
       );
 
-      WhatsAppService.launchWhatsApp(
-        phone: AppConstants.whatsappNumber,
-        message: booking.toWhatsAppMessage(),
-      );
+      try {
+        // Simulate a modern "sending" feel
+        await Future.delayed(const Duration(seconds: 1));
+
+        if (isEmail) {
+          await ContactService.sendAutoEmail(booking);
+        } else {
+          await ContactService.sendWhatsApp(booking);
+        }
+
+        _showSuccessDialog();
+      } catch (e) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red),
+        );
+      } finally {
+        setState(() => _isSubmitting = false);
+      }
     }
+  }
+
+  void _showSuccessDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: const Center(
+          child: Icon(
+            Icons.check_circle,
+            color: AppConstants.successColor,
+            size: 60,
+          ),
+        ),
+        content: const Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              'Request Sent!',
+              style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+            ),
+            SizedBox(height: 12),
+            Text(
+              'Your inquiry has been sent. Our team will contact you shortly.',
+              textAlign: TextAlign.center,
+              style: TextStyle(color: Colors.grey),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text(
+              'OK',
+              style: TextStyle(fontWeight: FontWeight.bold),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppConstants.backgroundColor,
+      backgroundColor: AppConstants.surfaceColor,
       appBar: const CustomHeader(),
       body: SingleChildScrollView(
-        child: Center(
-          child: Container(
-            constraints: const BoxConstraints(maxWidth: 900),
-            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 60),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _buildHeaderSection(),
-                const SizedBox(height: 48),
-                _buildFormSection(),
-              ],
+        child: Column(
+          children: [
+            _buildMinimalHero(),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 40),
+              child: Center(
+                child: Container(
+                  constraints: const BoxConstraints(maxWidth: 800),
+                  child: Column(children: [_buildFormCard()]),
+                ),
+              ),
             ),
-          ),
+            const CustomFooter(),
+          ],
         ),
       ),
     );
   }
 
-  Widget _buildHeaderSection() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: AppConstants.primaryColor.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(16),
-              ),
-              child: const Icon(
-                Icons.calendar_month,
-                color: AppConstants.primaryColor,
-              ),
+  Widget _buildMinimalHero() {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(vertical: 40),
+      decoration: const BoxDecoration(gradient: AppConstants.primaryGradient),
+      child: Column(
+        children: [
+          const Text(
+            'Book Your Journey',
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 32,
+              fontWeight: FontWeight.w900,
+              letterSpacing: 1.2,
             ),
-            const SizedBox(width: 16),
-            const Text(
-              'Secure Your Ride',
-              style: TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.bold,
-                color: AppConstants.primaryColor,
-                letterSpacing: 1.2,
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 16),
-        const Text(
-          'Booking Details',
-          style: TextStyle(
-            fontSize: 36,
-            fontWeight: FontWeight.w900,
-            color: AppConstants.secondaryColor,
           ),
-        ),
-        const SizedBox(height: 8),
-        Text(
-          'Fill in the details below. We will contact you on WhatsApp to confirm.',
-          style: TextStyle(fontSize: 16, color: Colors.grey[600]),
-        ),
-      ],
+          const SizedBox(height: 8),
+          Text(
+            'Fast, Secure & Reliable Cab Service',
+            style: TextStyle(
+              color: Colors.white.withOpacity(0.9),
+              fontSize: 16,
+            ),
+          ),
+        ],
+      ),
     );
   }
 
-  Widget _buildFormSection() {
+  Widget _buildFormCard() {
     return Container(
-      padding: const EdgeInsets.all(40),
+      padding: const EdgeInsets.all(32),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(32),
+        borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.04),
-            blurRadius: 40,
-            offset: const Offset(0, 20),
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 30,
+            offset: const Offset(0, 10),
           ),
         ],
       ),
@@ -139,108 +180,84 @@ class _BookingPageState extends State<BookingPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            if (widget.selectedPackage != null) ...[
-              _buildSelectedPackageBanner(),
-              const SizedBox(height: 32),
-            ],
-
+            if (widget.selectedPackage != null) _buildSelectedPackageBanner(),
             const Text(
-              'Personal Information',
+              'Personal Details',
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
-            const SizedBox(height: 24),
+            const SizedBox(height: 20),
             ResponsiveLayout(
               mobile: Column(
                 children: [
-                  _buildInputField(
-                    controller: _nameController,
-                    label: 'Full Name',
-                    hint: 'e.g. Rahul Sharma',
-                    icon: Icons.person_outline,
-                    validator: (v) => v!.isEmpty ? 'Name required' : null,
-                  ),
-                  const SizedBox(height: 20),
-                  _buildInputField(
-                    controller: _mobileController,
-                    label: 'Mobile Number',
-                    hint: '10 digit mobile number',
-                    icon: Icons.phone_android_outlined,
-                    keyboardType: TextInputType.phone,
-                    validator: (v) => v!.length < 10 ? 'Invalid mobile' : null,
-                  ),
+                  _buildField(_nameController, 'Your Name', Icons.person),
+                  const SizedBox(height: 16),
+                  _buildField(_mobileController, 'Mobile Number', Icons.phone),
                 ],
               ),
               desktop: Row(
                 children: [
                   Expanded(
-                    child: _buildInputField(
-                      controller: _nameController,
-                      label: 'Full Name',
-                      hint: 'e.g. Rahul Sharma',
-                      icon: Icons.person_outline,
-                      validator: (v) => v!.isEmpty ? 'Name required' : null,
+                    child: _buildField(
+                      _nameController,
+                      'Your Name',
+                      Icons.person,
                     ),
                   ),
-                  const SizedBox(width: 20),
+                  const SizedBox(width: 16),
                   Expanded(
-                    child: _buildInputField(
-                      controller: _mobileController,
-                      label: 'Mobile Number',
-                      hint: '10 digit mobile number',
-                      icon: Icons.phone_android_outlined,
-                      keyboardType: TextInputType.phone,
-                      validator: (v) =>
-                          v!.length < 10 ? 'Invalid mobile' : null,
+                    child: _buildField(
+                      _mobileController,
+                      'Mobile Number',
+                      Icons.phone,
                     ),
                   ),
                 ],
               ),
             ),
-
-            const SizedBox(height: 40),
+            const SizedBox(height: 32),
             const Text(
               'Route Details',
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
-            const SizedBox(height: 24),
-            _buildInputField(
-              controller: _fromController,
-              label: 'Pickup Location',
-              hint: 'Search pickup location...',
-              icon: Icons.my_location,
-              suffixIcon: Icons.map,
-              validator: (v) => v!.isEmpty ? 'Pickup location required' : null,
-            ),
             const SizedBox(height: 20),
-            _buildInputField(
-              controller: _toController,
-              label: 'Drop Location',
-              hint: 'Search destination...',
-              icon: Icons.location_on_outlined,
-              suffixIcon: Icons.explore,
-              validator: (v) => v!.isEmpty ? 'Drop location required' : null,
-            ),
-
-            const SizedBox(height: 40),
-            _buildPersonsSelector(),
-
-            const SizedBox(height: 60),
-            SizedBox(
-              width: double.infinity,
-              height: 64,
-              child: ElevatedButton.icon(
-                onPressed: _submitBooking,
-                icon: const FaIcon(FontAwesomeIcons.whatsapp, size: 24),
-                label: const Text(
-                  'Book Now on WhatsApp',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                ),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF25D366), // WhatsApp Green
-                  elevation: 0,
-                ),
-              ),
-            ),
+            _buildField(_fromController, 'Pickup Location', Icons.my_location),
+            const SizedBox(height: 16),
+            _buildField(_toController, 'Destination', Icons.location_on),
+            const SizedBox(height: 32),
+            _buildPersonSelector(),
+            const SizedBox(height: 48),
+            _isSubmitting
+                ? const Center(child: CircularProgressIndicator())
+                : Row(
+                    children: [
+                      Expanded(
+                        child: ElevatedButton.icon(
+                          onPressed: () => _handleSubmission(false),
+                          icon: const FaIcon(
+                            FontAwesomeIcons.whatsapp,
+                            size: 20,
+                          ),
+                          label: const Text('BOOK VIA WHATSAPP'),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFF25D366),
+                            padding: const EdgeInsets.symmetric(vertical: 20),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: ElevatedButton.icon(
+                          onPressed: () => _handleSubmission(true),
+                          icon: const Icon(Icons.email_outlined, size: 20),
+                          label: const Text('BOOK VIA EMAIL'),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppConstants.secondaryColor,
+                            padding: const EdgeInsets.symmetric(vertical: 20),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
           ],
         ),
       ),
@@ -249,160 +266,90 @@ class _BookingPageState extends State<BookingPage> {
 
   Widget _buildSelectedPackageBanner() {
     return Container(
+      margin: const EdgeInsets.only(bottom: 32),
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
       decoration: BoxDecoration(
-        color: AppConstants.primaryColor.withOpacity(0.05),
+        color: AppConstants.primaryColor.withOpacity(0.08),
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: AppConstants.primaryColor.withOpacity(0.2)),
       ),
       child: Row(
         children: [
-          const CircleAvatar(
-            backgroundColor: AppConstants.primaryColor,
-            radius: 12,
-            child: Icon(Icons.check, size: 16, color: Colors.white),
+          const Icon(
+            Icons.local_offer,
+            color: AppConstants.primaryColor,
+            size: 20,
           ),
-          const SizedBox(width: 16),
+          const SizedBox(width: 12),
           Text(
-            'Selected Package:',
+            'Package:',
             style: TextStyle(
-              color: Colors.grey[700],
-              fontWeight: FontWeight.w600,
+              color: AppConstants.primaryColor,
+              fontWeight: FontWeight.bold,
             ),
           ),
           const SizedBox(width: 8),
           Text(
             widget.selectedPackage!,
-            style: const TextStyle(
-              fontWeight: FontWeight.bold,
-              color: AppConstants.primaryColor,
-            ),
+            style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 16),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildInputField({
-    required TextEditingController controller,
-    required String label,
-    required String hint,
-    required IconData icon,
-    IconData? suffixIcon,
-    TextInputType? keyboardType,
-    String? Function(String?)? validator,
-  }) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          label,
-          style: const TextStyle(
-            fontSize: 14,
-            fontWeight: FontWeight.w600,
-            color: AppConstants.secondaryColor,
-          ),
-        ),
-        const SizedBox(height: 8),
-        TextFormField(
-          controller: controller,
-          keyboardType: keyboardType,
-          validator: validator,
-          decoration: InputDecoration(
-            hintText: hint,
-            prefixIcon: Icon(icon, color: Colors.grey),
-            suffixIcon: suffixIcon != null
-                ? Icon(suffixIcon, size: 20, color: AppConstants.primaryColor)
-                : null,
-            filled: true,
-            fillColor: Colors.grey[50],
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(16),
-              borderSide: BorderSide(color: Colors.grey[200]!),
-            ),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(16),
-              borderSide: BorderSide(color: Colors.grey[200]!),
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(16),
-              borderSide: const BorderSide(
-                color: AppConstants.primaryColor,
-                width: 2,
-              ),
-            ),
-          ),
-        ),
-      ],
+  Widget _buildField(
+    TextEditingController controller,
+    String label,
+    IconData icon,
+  ) {
+    return TextFormField(
+      controller: controller,
+      validator: (v) => v!.isEmpty ? 'Field required' : null,
+      decoration: InputDecoration(
+        labelText: label,
+        prefixIcon: Icon(icon, color: AppConstants.primaryColor, size: 20),
+      ),
     );
   }
 
-  Widget _buildPersonsSelector() {
+  Widget _buildPersonSelector() {
     return Row(
       children: [
-        const Text(
-          'Passengers',
-          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+        const Expanded(
+          child: Text(
+            'Number of Persons',
+            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+          ),
         ),
-        const Spacer(),
         Container(
-          padding: const EdgeInsets.all(4),
+          height: 50,
           decoration: BoxDecoration(
-            color: Colors.grey[50],
-            borderRadius: BorderRadius.circular(14),
-            border: Border.all(color: Colors.grey[200]!),
+            color: AppConstants.surfaceColor,
+            borderRadius: BorderRadius.circular(12),
           ),
           child: Row(
             children: [
-              _buildCounterBtn(Icons.remove, () {
-                if (_numberOfPersons > 1) setState(() => _numberOfPersons--);
-              }),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20),
-                child: Text(
-                  '$_numberOfPersons',
-                  style: const TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                  ),
+              IconButton(
+                onPressed: () =>
+                    setState(() => _persons = _persons > 1 ? _persons - 1 : 1),
+                icon: const Icon(Icons.remove, size: 18),
+              ),
+              Text(
+                '$_persons',
+                style: const TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
                 ),
               ),
-              _buildCounterBtn(
-                Icons.add,
-                () => setState(() => _numberOfPersons++),
+              IconButton(
+                onPressed: () => setState(() => _persons++),
+                icon: const Icon(Icons.add, size: 18),
               ),
             ],
           ),
         ),
       ],
     );
-  }
-
-  Widget _buildCounterBtn(IconData icon, VoidCallback onTap) {
-    return InkWell(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.all(8),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(10),
-          boxShadow: [
-            BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 4),
-          ],
-        ),
-        child: Icon(icon, size: 20, color: AppConstants.primaryColor),
-      ),
-    );
-  }
-}
-
-extension ResponsiveFormField on Widget {
-  Widget responsive(BuildContext context) {
-    if (ResponsiveLayout.isMobile(context)) {
-      return Column(
-        children: [this],
-      ); // This logic is simplified, usually we wrap Row children
-    }
-    return this;
   }
 }

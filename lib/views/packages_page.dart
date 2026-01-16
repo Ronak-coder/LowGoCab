@@ -15,66 +15,77 @@ class PackagesPage extends StatelessWidget {
         'title': 'One Day Jaipur Sightseeing Tour',
         'price': '₹1,500',
         'desc': 'Detailed tour of Amer Fort, Jal Mahal, Hawa Mahal and more.',
-        'image':
-            'https://images.unsplash.com/photo-1599661046289-e31897856741?auto=format&fit=crop&q=80&w=800',
-        'duration': '8 Hours',
+        'image': 'assets/images/JaipurTour.png',
+        'duration': '12 Hours',
         'location': 'Jaipur City',
       },
       {
-        'title': 'Rajasthan Royal Tour Package',
-        'price': '₹4,500',
+        'title': 'Jaipur to Khatu Shyam Ji ',
+        'price': '₹2,199',
         'desc':
-            'Experience the royalty of Rajasthan across multiple heritage cities.',
-        'image':
-            'https://images.unsplash.com/photo-1524492412937-b28074a5d7da?auto=format&fit=crop&q=80&w=800',
-        'duration': '3 Days',
-        'location': 'Rajasthan',
+            'One Day Trip from Jaipur to Khatu Shyam Ji Temple with Toll and Parking',
+        'image': 'assets/images/jpr.png',
+        'duration': '8 Hours',
+        'location': 'Jaipur City',
       },
+      // {
+      //   'title': 'Rajasthan Royal Tour Package',
+      //   'price': '₹4,500',
+      //   'desc':
+      //       'Experience the royalty of Rajasthan across multiple heritage cities.',
+      //   'image':
+      //       'https://images.unsplash.com/photo-1524492412937-b28074a5d7da?auto=format&fit=crop&q=80&w=800',
+      //   'duration': '3 Days',
+      //   'location': 'Rajasthan',
+      // },
       {
         'title': 'Same Day Agra Tour From Jaipur',
         'price': '₹5,500',
         'desc': 'Visit the Taj Mahal and Agra Fort in a one day excursion.',
         'image':
-            'https://images.unsplash.com/photo-1564507592333-c60657451ddc?auto=format&fit=crop&q=80&w=800',
+            'https://images.unsplash.com/photo-1524492412937-b28074a5d7da?auto=format&fit=crop&q=80&w=800',
         'duration': 'Full Day',
         'location': 'Agra',
       },
-      {
-        'title': 'Jodhpur Udaipur 4 Days Tour',
-        'price': '₹12,000',
-        'desc':
-            'Explore the blue city and the city of lakes in this premium package.',
-        'image':
-            'https://images.unsplash.com/photo-1603262110263-fb0112e7cc33?auto=format&fit=crop&q=80&w=800',
-        'duration': '4 Days',
-        'location': 'Rajasthan',
-      },
+      // {
+      //   'title': 'Jodhpur Udaipur 4 Days Tour',
+      //   'price': '₹12,000',
+      //   'desc':
+      //       'Explore the blue city and the city of lakes in this premium package.',
+      //   'image': 'assets/images/JaipurTour.png',
+      //   'duration': '4 Days',
+      //   'location': 'Rajasthan',
+      // },
     ];
 
     final List<Map<String, dynamic>> cabs = [
       {
-        'model': 'Toyota Etios',
-        'rate': '11/Km',
-        'seats': '4+1',
+        'model': 'Toyota Etios/Swift Dzire',
+        'rate': '10/Km',
+        'seats': '4',
         'type': 'Sedan',
+        'image': 'assets/images/Dzire.png',
+      },
+      {
+        'model': 'Maruti Ertiga',
+        'rate': '13/Km',
+        'seats': '5+1',
+        'type': 'MPV',
+        'image': 'assets/images/ertiga.png',
       },
       {
         'model': 'Toyota Innova',
         'rate': '16/Km',
         'seats': '6+1',
         'type': 'MPV',
+        'image': 'assets/images/innova.png',
       },
       {
         'model': 'Toyota Crysta',
         'rate': '18/Km',
         'seats': '7+1',
         'type': 'Luxury MPV',
-      },
-      {
-        'model': 'Tempo Traveller',
-        'rate': '27/Km',
-        'seats': '12+1',
-        'type': 'Mini Bus',
+        'image': 'assets/images/innova.png',
       },
     ];
 
@@ -236,7 +247,9 @@ class PackagesPage extends StatelessWidget {
               child: Stack(
                 fit: StackFit.expand,
                 children: [
-                  Image.network(tour['image'], fit: BoxFit.cover),
+                  tour['image'].startsWith('http')
+                      ? Image.network(tour['image'], fit: BoxFit.cover)
+                      : Image.asset(tour['image'], fit: BoxFit.cover),
                   Positioned(
                     top: 20,
                     right: 20,
@@ -395,11 +408,13 @@ class PackagesPage extends StatelessWidget {
           ),
           child: Column(
             children: [
-              const Expanded(
-                child: Icon(
-                  Icons.directions_car_filled,
-                  size: 80,
-                  color: AppConstants.primaryColor,
+              Expanded(
+                child: ClipRRect(
+                  borderRadius: const BorderRadius.only(
+                    topLeft: Radius.circular(24),
+                    topRight: Radius.circular(24),
+                  ),
+                  child: Image.asset(cab['image'], fit: BoxFit.cover),
                 ),
               ),
               Text(

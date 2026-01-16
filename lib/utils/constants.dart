@@ -3,17 +3,18 @@ import 'package:google_fonts/google_fonts.dart';
 
 class AppConstants {
   static const String appName = 'LowGo Cab';
-  static const String whatsappNumber =
-      '+919461386845'; // Updated with a placeholder but valid-ish number
-  static const String contactEmail = 'support@lowgocab.online';
+  static const String whatsappNumber = '+91 9461386845';
+  static const String instagramUrl =
+      'https://www.instagram.com/lowgocab?igsh=MXhueHdwNXBkNXlzMg==';
+  // static const String contactEmail = 'support@lowgocab.online';
+  static const String contactEmail =
+      'pragyanknscspl@gmail.com'; // Backend/Admin
+  static const String displayEmail = 'support@lowgocab.online'; // UI Display
 
-  // EmailJS Configuration (For Free Auto-Emails)
-  static const String emailJsServiceId =
-      'service_xxey8ct'; // Get from emailjs.com
-  static const String emailJsTemplateId =
-      'template_v4saizz'; // Get from emailjs.com
-  static const String emailJsPublicKey =
-      's9vo_rN7nVTZf27iz'; // Get from emailjs.com
+  // Brevo (Sendinblue) Configuration (For Free Auto-Emails - 300/day)
+  // Get your free key at https://onboarding.brevo.com/account/api
+  static const String brevoApiKey =
+      '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';
 
   // Sightseeing Cab in Jaipur Inspired Palette - Enhanced for Modern Feel
   static const Color primaryColor = Color(0xFFEE0B5E); // Vibrant Pink/Magenta

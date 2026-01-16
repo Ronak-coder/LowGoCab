@@ -9,6 +9,7 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:lowgo_cab/widgets/custom_footer.dart';
 import 'package:lowgo_cab/views/about_page.dart';
 import 'booking_page.dart';
+import 'package:lowgo_cab/views/feedback_page.dart';
 
 class HomePage extends StatelessWidget {
   const HomePage({super.key});
@@ -142,18 +143,11 @@ class HomePage extends StatelessWidget {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    ElevatedButton(
+                    _AnimatedButton(
                       onPressed: () => Navigator.push(
                         context,
                         MaterialPageRoute(
                           builder: (context) => const PackagesPage(),
-                        ),
-                      ),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: AppConstants.primaryColor,
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 40,
-                          vertical: 24,
                         ),
                       ),
                       child: const Text(
@@ -166,20 +160,12 @@ class HomePage extends StatelessWidget {
                     ),
                     if (!isMobile) ...[
                       const SizedBox(width: 20),
-                      OutlinedButton(
+                      _AnimatedOutlinedButton(
                         onPressed: () => Navigator.pushReplacement(
                           context,
                           MaterialPageRoute(
                             builder: (context) => const PackagesPage(),
                           ),
-                        ),
-                        style: OutlinedButton.styleFrom(
-                          side: const BorderSide(color: Colors.white, width: 2),
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 40,
-                            vertical: 24,
-                          ),
-                          foregroundColor: Colors.white,
                         ),
                         child: const Text(
                           'OUR PACKAGES',
@@ -222,8 +208,8 @@ class HomePage extends StatelessWidget {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
-              _statItem('5000+', 'Happy Clients'),
-              _statItem('150+', 'Verified Drivers'),
+              _statItem('500+', 'Happy Clients'),
+              _statItem('50+', 'Verified Drivers'),
               _statItem('24/7', 'Support Available'),
               if (!ResponsiveLayout.isMobile(context))
                 _statItem('100%', 'Safe Guarantee'),
@@ -260,7 +246,7 @@ class HomePage extends StatelessWidget {
   Widget _buildAboutModern(BuildContext context) {
     final isMobile = ResponsiveLayout.isMobile(context);
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 80, horizontal: 24),
+      padding: const EdgeInsets.symmetric(vertical: 40, horizontal: 24),
       child: Center(
         child: Container(
           constraints: const BoxConstraints(maxWidth: 1200),
@@ -306,8 +292,8 @@ class HomePage extends StatelessWidget {
             _featureList('Certified Professional Drivers'),
             _featureList('Wide Range of Transparent Pricing'),
             _featureList('Zero Hidden Charges'),
-            const SizedBox(height: 48),
-            ElevatedButton(
+            const SizedBox(height: 32),
+            _AnimatedButton(
               onPressed: () => Navigator.pushReplacement(
                 context,
                 MaterialPageRoute(builder: (context) => const AboutPage()),
@@ -320,16 +306,58 @@ class HomePage extends StatelessWidget {
       if (!isMobile) const SizedBox(width: 80),
       Expanded(
         flex: isMobile ? 0 : 5,
-        child: Container(
-          height: 500,
-          margin: EdgeInsets.only(top: isMobile ? 40 : 0),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(30),
-            image: const DecorationImage(
-              image: NetworkImage(
-                'https://images.unsplash.com/photo-1598254823903-88746ac5fbc6?w=800', // Jaipur Hawa Mahal image
-              ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(30),
+          child: Container(
+            height: 500,
+            margin: EdgeInsets.only(top: isMobile ? 40 : 0),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(30),
+              color: AppConstants.surfaceColor,
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.2),
+                  blurRadius: 30,
+                  offset: const Offset(0, 15),
+                ),
+              ],
+            ),
+            child: Image.network(
+              'https://images.unsplash.com/photo-1524492412937-b28074a5d7da?w=800&q=80',
               fit: BoxFit.cover,
+              loadingBuilder: (context, child, loadingProgress) {
+                if (loadingProgress == null) return child;
+                return Center(
+                  child: CircularProgressIndicator(
+                    value: loadingProgress.expectedTotalBytes != null
+                        ? loadingProgress.cumulativeBytesLoaded /
+                              loadingProgress.expectedTotalBytes!
+                        : null,
+                  ),
+                );
+              },
+              errorBuilder: (context, error, stackTrace) {
+                return Container(
+                  color: AppConstants.surfaceColor,
+                  child: const Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(Icons.image, size: 80, color: Colors.grey),
+                        SizedBox(height: 16),
+                        Text(
+                          'Jaipur - The Pink City',
+                          style: TextStyle(
+                            fontSize: 24,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.grey,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              },
             ),
           ),
         ),
@@ -361,7 +389,7 @@ class HomePage extends StatelessWidget {
     return Container(
       width: double.infinity,
       color: AppConstants.surfaceColor,
-      padding: const EdgeInsets.symmetric(vertical: 100, horizontal: 24),
+      padding: const EdgeInsets.symmetric(vertical: 60, horizontal: 24),
       child: Center(
         child: Container(
           constraints: const BoxConstraints(maxWidth: 1200),
@@ -380,7 +408,7 @@ class HomePage extends StatelessWidget {
                 'Premium Travel Solutions',
                 style: TextStyle(fontSize: 36, fontWeight: FontWeight.w900),
               ),
-              const SizedBox(height: 60),
+              const SizedBox(height: 48),
               ResponsiveLayout(
                 mobile: _serviceGrid(1),
                 tablet: _serviceGrid(2),
@@ -422,25 +450,34 @@ class HomePage extends StatelessWidget {
   }
 
   Widget _serviceCard(IconData icon, String title, String desc) {
-    return Container(
-      padding: const EdgeInsets.all(32),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(icon, size: 48, color: AppConstants.primaryColor),
-          const SizedBox(height: 24),
-          Text(
-            title,
-            style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w900),
-          ),
-          const SizedBox(height: 12),
-          Text(desc, style: const TextStyle(color: Colors.grey)),
-        ],
+    return _HoverCard(
+      child: Container(
+        padding: const EdgeInsets.all(32),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(20),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.05),
+              blurRadius: 20,
+              offset: const Offset(0, 10),
+            ),
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(icon, size: 48, color: AppConstants.primaryColor),
+            const SizedBox(height: 24),
+            Text(
+              title,
+              style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w900),
+            ),
+            const SizedBox(height: 12),
+            Text(desc, style: const TextStyle(color: Colors.grey)),
+          ],
+        ),
       ),
     );
   }
@@ -531,7 +568,109 @@ class HomePage extends StatelessWidget {
               MaterialPageRoute(builder: (context) => const ContactPage()),
             ),
           ),
+          ListTile(
+            title: const Text('GIVE FEEDBACK'),
+            onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => const FeedbackPage()),
+            ),
+          ),
         ],
+      ),
+    );
+  }
+}
+
+// Animated Button Widget with Scale Effect
+class _AnimatedButton extends StatefulWidget {
+  final VoidCallback onPressed;
+  final Widget child;
+
+  const _AnimatedButton({required this.onPressed, required this.child});
+
+  @override
+  State<_AnimatedButton> createState() => _AnimatedButtonState();
+}
+
+class _AnimatedButtonState extends State<_AnimatedButton> {
+  bool _isHovered = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return MouseRegion(
+      onEnter: (_) => setState(() => _isHovered = true),
+      onExit: (_) => setState(() => _isHovered = false),
+      child: AnimatedScale(
+        scale: _isHovered ? 1.05 : 1.0,
+        duration: const Duration(milliseconds: 200),
+        curve: Curves.easeInOut,
+        child: ElevatedButton(onPressed: widget.onPressed, child: widget.child),
+      ),
+    );
+  }
+}
+
+// Hover Card Widget with Lift Effect
+class _HoverCard extends StatefulWidget {
+  final Widget child;
+
+  const _HoverCard({required this.child});
+
+  @override
+  State<_HoverCard> createState() => _HoverCardState();
+}
+
+class _HoverCardState extends State<_HoverCard> {
+  bool _isHovered = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return MouseRegion(
+      onEnter: (_) => setState(() => _isHovered = true),
+      onExit: (_) => setState(() => _isHovered = false),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeInOut,
+        transform: Matrix4.translationValues(0, _isHovered ? -10 : 0, 0),
+        child: widget.child,
+      ),
+    );
+  }
+}
+
+// Animated Outlined Button Widget with Scale Effect
+class _AnimatedOutlinedButton extends StatefulWidget {
+  final VoidCallback onPressed;
+  final Widget child;
+
+  const _AnimatedOutlinedButton({required this.onPressed, required this.child});
+
+  @override
+  State<_AnimatedOutlinedButton> createState() =>
+      _AnimatedOutlinedButtonState();
+}
+
+class _AnimatedOutlinedButtonState extends State<_AnimatedOutlinedButton> {
+  bool _isHovered = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return MouseRegion(
+      onEnter: (_) => setState(() => _isHovered = true),
+      onExit: (_) => setState(() => _isHovered = false),
+      child: AnimatedScale(
+        scale: _isHovered ? 1.05 : 1.0,
+        duration: const Duration(milliseconds: 200),
+        curve: Curves.easeInOut,
+        child: OutlinedButton(
+          onPressed: widget.onPressed,
+          style: OutlinedButton.styleFrom(
+            side: const BorderSide(color: Colors.white, width: 2),
+            padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 24),
+            foregroundColor: Colors.white,
+          ),
+          child: widget.child,
+        ),
       ),
     );
   }

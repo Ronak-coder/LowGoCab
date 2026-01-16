@@ -19,6 +19,7 @@ class _BookingPageState extends State<BookingPage> {
   final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
   final _mobileController = TextEditingController();
+  final _emailController = TextEditingController();
   final _fromController = TextEditingController();
   final _toController = TextEditingController();
   int _persons = 1;
@@ -28,6 +29,7 @@ class _BookingPageState extends State<BookingPage> {
   void dispose() {
     _nameController.dispose();
     _mobileController.dispose();
+    _emailController.dispose();
     _fromController.dispose();
     _toController.dispose();
     super.dispose();
@@ -40,6 +42,7 @@ class _BookingPageState extends State<BookingPage> {
       final booking = Booking(
         name: _nameController.text,
         mobile: _mobileController.text,
+        email: _emailController.text,
         fromLocation: _fromController.text,
         toLocation: _toController.text,
         numberOfPersons: _persons,
@@ -109,19 +112,24 @@ class _BookingPageState extends State<BookingPage> {
 
   @override
   Widget build(BuildContext context) {
+    final isMobile = ResponsiveLayout.isMobile(context);
     return Scaffold(
       backgroundColor: AppConstants.surfaceColor,
       appBar: const CustomHeader(),
+      endDrawer: _buildDrawer(context),
       body: SingleChildScrollView(
         child: Column(
           children: [
-            _buildMinimalHero(),
+            _buildMinimalHero(isMobile),
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 40),
+              padding: EdgeInsets.symmetric(
+                horizontal: isMobile ? 16 : 24,
+                vertical: 40,
+              ),
               child: Center(
                 child: Container(
                   constraints: const BoxConstraints(maxWidth: 800),
-                  child: Column(children: [_buildFormCard()]),
+                  child: Column(children: [_buildFormCard(isMobile)]),
                 ),
               ),
             ),
@@ -132,18 +140,18 @@ class _BookingPageState extends State<BookingPage> {
     );
   }
 
-  Widget _buildMinimalHero() {
+  Widget _buildMinimalHero(bool isMobile) {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.symmetric(vertical: 40),
+      padding: EdgeInsets.symmetric(vertical: isMobile ? 30 : 40),
       decoration: const BoxDecoration(gradient: AppConstants.primaryGradient),
       child: Column(
         children: [
-          const Text(
+          Text(
             'Book Your Journey',
             style: TextStyle(
               color: Colors.white,
-              fontSize: 32,
+              fontSize: isMobile ? 28 : 32,
               fontWeight: FontWeight.w900,
               letterSpacing: 1.2,
             ),
@@ -151,9 +159,10 @@ class _BookingPageState extends State<BookingPage> {
           const SizedBox(height: 8),
           Text(
             'Fast, Secure & Reliable Cab Service',
+            textAlign: TextAlign.center,
             style: TextStyle(
               color: Colors.white.withOpacity(0.9),
-              fontSize: 16,
+              fontSize: isMobile ? 14 : 16,
             ),
           ),
         ],
@@ -161,9 +170,9 @@ class _BookingPageState extends State<BookingPage> {
     );
   }
 
-  Widget _buildFormCard() {
+  Widget _buildFormCard(bool isMobile) {
     return Container(
-      padding: const EdgeInsets.all(32),
+      padding: EdgeInsets.all(isMobile ? 24 : 32),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(24),
@@ -214,6 +223,8 @@ class _BookingPageState extends State<BookingPage> {
                 ],
               ),
             ),
+            const SizedBox(height: 16),
+            _buildField(_emailController, 'Email Address', Icons.email),
             const SizedBox(height: 32),
             const Text(
               'Route Details',
@@ -228,6 +239,39 @@ class _BookingPageState extends State<BookingPage> {
             const SizedBox(height: 48),
             _isSubmitting
                 ? const Center(child: CircularProgressIndicator())
+                : isMobile
+                ? Column(
+                    children: [
+                      SizedBox(
+                        width: double.infinity,
+                        child: ElevatedButton.icon(
+                          onPressed: () => _handleSubmission(false),
+                          icon: const FaIcon(
+                            FontAwesomeIcons.whatsapp,
+                            size: 20,
+                          ),
+                          label: const Text('BOOK VIA WHATSAPP'),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFF25D366),
+                            padding: const EdgeInsets.symmetric(vertical: 18),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      SizedBox(
+                        width: double.infinity,
+                        child: ElevatedButton.icon(
+                          onPressed: () => _handleSubmission(true),
+                          icon: const Icon(Icons.email_outlined, size: 20),
+                          label: const Text('BOOK VIA EMAIL'),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppConstants.secondaryColor,
+                            padding: const EdgeInsets.symmetric(vertical: 18),
+                          ),
+                        ),
+                      ),
+                    ],
+                  )
                 : Row(
                     children: [
                       Expanded(
@@ -350,6 +394,44 @@ class _BookingPageState extends State<BookingPage> {
           ),
         ),
       ],
+    );
+  }
+
+  Widget _buildDrawer(BuildContext context) {
+    return Drawer(
+      child: ListView(
+        padding: EdgeInsets.zero,
+        children: [
+          const DrawerHeader(
+            decoration: BoxDecoration(gradient: AppConstants.primaryGradient),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                Text(
+                  'LOWGO CAB',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          ListTile(
+            title: const Text('HOME'),
+            onTap: () => Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(builder: (context) => const BookingPage()),
+            ),
+          ),
+          ListTile(
+            title: const Text('BOOK NOW'),
+            onTap: () => Navigator.pop(context),
+          ),
+        ],
+      ),
     );
   }
 }

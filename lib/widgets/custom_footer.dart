@@ -4,6 +4,7 @@ import 'package:lowgo_cab/views/home_page.dart';
 import 'package:lowgo_cab/views/packages_page.dart';
 import 'package:lowgo_cab/views/contact_page.dart';
 import 'package:lowgo_cab/views/about_page.dart';
+import 'package:lowgo_cab/views/feedback_page.dart';
 
 class CustomFooter extends StatelessWidget {
   const CustomFooter({super.key});
@@ -32,7 +33,7 @@ class CustomFooter extends StatelessWidget {
                         const SizedBox(height: 40),
                         _footerColumn(
                           'CONTACT US',
-                          'Amer Road, Jaipur, Rajasthan\n${AppConstants.whatsappNumber}\n${AppConstants.contactEmail}',
+                          'Anupam Apartment A2/312, Pratap Nagar, Jaipur, Rajasthan\n${AppConstants.whatsappNumber}\n${AppConstants.displayEmail}',
                         ),
                       ],
                     );
@@ -52,7 +53,7 @@ class CustomFooter extends StatelessWidget {
                       Expanded(
                         child: _footerColumn(
                           'CONTACT US',
-                          'Amer Road, Jaipur, Rajasthan\n${AppConstants.whatsappNumber}\n${AppConstants.contactEmail}',
+                          'Anupam Apartment A2/312, Pratap Nagar, Jaipur, Rajasthan\n${AppConstants.whatsappNumber}\n${AppConstants.displayEmail}',
                         ),
                       ),
                     ],
@@ -111,6 +112,7 @@ class CustomFooter extends StatelessWidget {
         _linkItem(context, 'About Us', const AboutPage()),
         _linkItem(context, 'Packages', const PackagesPage()),
         _linkItem(context, 'Contact Us', const ContactPage()),
+        _linkItem(context, 'Feedback', const FeedbackPage()),
       ],
     );
   }

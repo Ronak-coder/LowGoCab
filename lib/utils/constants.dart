@@ -7,9 +7,8 @@ class AppConstants {
   static const String whatsappNumber = '+91 9461386845';
   static const String instagramUrl =
       'https://www.instagram.com/lowgocab?igsh=MXhueHdwNXBkNXlzMg==';
-  // static const String contactEmail = 'support@lowgocab.online';
   static const String contactEmail =
-      'pragyanknscspl@gmail.com'; // Backend/Admin
+      'pragyank@lowgocab.online'; // Admin receives all notifications
   static const String displayEmail = 'support@lowgocab.online'; // UI Display
 
   // Email via Google Apps Script (free relay using your Gmail)

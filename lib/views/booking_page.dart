@@ -51,30 +51,42 @@ class _BookingPageState extends State<BookingPage> {
       );
 
       try {
-        // Simulate a modern "sending" feel
-        await Future.delayed(const Duration(seconds: 1));
+        setState(() => _isSubmitting = true);
 
         // 1. Save to Backend (Firestore)
         await AppService.saveBooking(booking);
 
-        // 2. Send Notifications
-        if (isEmail) {
-          // Send email (admin + customer confirmation)
-          await ContactService.sendAutoEmail(booking);
-          // Also open WhatsApp so admin gets instant notification
-          await ContactService.sendWhatsApp(booking);
-        } else {
-          // WhatsApp only
-          await ContactService.sendWhatsApp(booking);
+        // 2. Send Notifications (separately to ensure booking success is shown even if this fails)
+        try {
+          if (isEmail) {
+            // Send email only (as requested)
+            await ContactService.sendAutoEmail(booking);
+          } else {
+            // WhatsApp + Email (send email silently in background for record)
+            ContactService.sendAutoEmail(booking); // No await, fire & forget
+            await ContactService.sendWhatsApp(booking);
+          }
+        } catch (e) {
+          debugPrint('Notification Error: $e');
+          // If WhatsApp fails to launch, we still want to show success dialog
+          // but maybe show a snackbar too?
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('Booking Saved! (Notification issue: $e)'),
+                backgroundColor: Colors.orange,
+              ),
+            );
+          }
         }
 
-        _showSuccessDialog(isEmail);
+        if (mounted) _showSuccessDialog(isEmail);
       } catch (e) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red),
         );
       } finally {
-        setState(() => _isSubmitting = false);
+        if (mounted) setState(() => _isSubmitting = false);
       }
     }
   }
@@ -366,7 +378,7 @@ class _BookingPageState extends State<BookingPage> {
                         child: ElevatedButton.icon(
                           onPressed: () => _handleSubmission(true),
                           icon: const Icon(Icons.email_outlined, size: 20),
-                          label: const Text('BOOK VIA EMAIL'),
+                          label: const Text('BOOK Now'),
                           style: ElevatedButton.styleFrom(
                             backgroundColor: AppConstants.secondaryColor,
                             padding: const EdgeInsets.symmetric(vertical: 20),

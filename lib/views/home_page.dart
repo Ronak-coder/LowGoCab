@@ -55,17 +55,64 @@ class HomePage extends StatelessWidget {
   }
 
   Widget _buildFloatingWhatsApp() {
-    return FloatingActionButton.extended(
-      onPressed: () => launchUrl(
-        Uri.parse(
-          'https://wa.me/${AppConstants.whatsappNumber.replaceAll('+', '')}',
+    return Container(
+      margin: const EdgeInsets.only(bottom: 16, right: 16),
+      child: MouseRegion(
+        cursor: SystemMouseCursors.click,
+        child: GestureDetector(
+          onTap: () => launchUrl(
+            Uri.parse(
+              'https://wa.me/${AppConstants.whatsappNumber.replaceAll('+', '').replaceAll(' ', '')}',
+            ),
+          ),
+          child: Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              gradient: AppConstants.primaryGradient,
+              shape: BoxShape.circle,
+              boxShadow: [
+                BoxShadow(
+                  color: AppConstants.primaryColor.withOpacity(0.4),
+                  blurRadius: 20,
+                  offset: const Offset(0, 8),
+                ),
+              ],
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(25),
+                  child: Image.asset(
+                    'assets/logo.png',
+                    height: 50,
+                    width: 50,
+                    errorBuilder: (context, error, stackTrace) => const Icon(
+                      Icons.local_taxi,
+                      color: Colors.white,
+                      size: 30,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                const Text(
+                  'Book on WhatsApp ',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w800,
+                    fontSize: 14,
+                  ),
+                ),
+                const Icon(
+                  FontAwesomeIcons.whatsapp,
+                  color: Colors.white,
+                  size: 20,
+                ),
+                const SizedBox(width: 8),
+              ],
+            ),
+          ),
         ),
-      ),
-      backgroundColor: const Color(0xFF25D366),
-      icon: const FaIcon(FontAwesomeIcons.whatsapp, color: Colors.white),
-      label: const Text(
-        'Chat with Us',
-        style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
       ),
     );
   }
@@ -74,11 +121,11 @@ class HomePage extends StatelessWidget {
     final isMobile = ResponsiveLayout.isMobile(context);
     return Container(
       width: double.infinity,
-      height: isMobile ? 600 : 800,
+      height: isMobile ? 650 : 850,
       decoration: const BoxDecoration(
         image: DecorationImage(
           image: NetworkImage(
-            'https://images.unsplash.com/photo-1485291571150-772bcfc10da5?w=1600', // Premium sedan image
+            'https://images.unsplash.com/photo-1485291571150-772bcfc10da5?w=1600',
           ),
           fit: BoxFit.cover,
         ),
@@ -87,9 +134,9 @@ class HomePage extends StatelessWidget {
         decoration: BoxDecoration(
           gradient: LinearGradient(
             colors: [
-              Colors.black.withOpacity(0.7),
-              Colors.transparent,
-              Colors.black.withOpacity(0.7),
+              Colors.black.withOpacity(0.85),
+              Colors.black.withOpacity(0.3),
+              Colors.black.withOpacity(0.9),
             ],
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
@@ -97,86 +144,119 @@ class HomePage extends StatelessWidget {
         ),
         child: Center(
           child: Container(
-            constraints: const BoxConstraints(maxWidth: 1000),
+            constraints: const BoxConstraints(maxWidth: 1100),
             padding: const EdgeInsets.symmetric(horizontal: 24),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 8,
+                _fadeIn(
+                  delay: 100,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 20,
+                      vertical: 10,
+                    ),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.15),
+                      borderRadius: BorderRadius.circular(40),
+                      border: Border.all(color: Colors.white24),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(
+                          Icons.star,
+                          color: AppConstants.accentColor,
+                          size: 16,
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          'JAIPUR\'S #1 TAXI SERVICE',
+                          style: TextStyle(
+                            color: Colors.white.withOpacity(0.9),
+                            fontWeight: FontWeight.w800,
+                            letterSpacing: 2,
+                            fontSize: 11,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
-                  decoration: BoxDecoration(
-                    color: AppConstants.primaryColor,
-                    borderRadius: BorderRadius.circular(30),
-                  ),
-                  child: const Text(
-                    'TAXI SERVICE IN JAIPUR',
+                ),
+                const SizedBox(height: 32),
+                _fadeIn(
+                  delay: 300,
+                  child: Text(
+                    'Experience Premium\nComfort & Safety',
+                    textAlign: TextAlign.center,
                     style: TextStyle(
+                      fontSize: isMobile ? 44 : 96,
+                      fontWeight: FontWeight.w900,
                       color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                      letterSpacing: 2,
-                      fontSize: 12,
+                      height: 0.95,
+                      letterSpacing: -2,
                     ),
                   ),
                 ),
-                const SizedBox(height: 24),
-                Text(
-                  'Expert Local & \nOutstation Travel',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontSize: isMobile ? 48 : 84,
-                    fontWeight: FontWeight.w900,
-                    color: Colors.white,
-                    height: 1.0,
-                    letterSpacing: -1,
+                const SizedBox(height: 28),
+                _fadeIn(
+                  delay: 500,
+                  child: Text(
+                    'Professional chauffeurs, transparent pricing, and 24/7 support.',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: isMobile ? 18 : 22,
+                      color: Colors.white.withOpacity(0.8),
+                      fontWeight: FontWeight.w400,
+                    ),
                   ),
                 ),
-                const SizedBox(height: 24),
-                const Text(
-                  'Premium Cars, Professional Drivers, Best Prices Guaranteed.',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(fontSize: 20, color: Colors.white70),
-                ),
-                const SizedBox(height: 48),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    _AnimatedButton(
-                      onPressed: () => Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const PackagesPage(),
-                        ),
-                      ),
-                      child: const Text(
-                        'BOOK YOUR RIDE',
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 16,
-                        ),
-                      ),
-                    ),
-                    if (!isMobile) ...[
-                      const SizedBox(width: 20),
-                      _AnimatedOutlinedButton(
-                        onPressed: () => Navigator.pushReplacement(
+                const SizedBox(height: 54),
+                _fadeIn(
+                  delay: 700,
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      _AnimatedButton(
+                        onPressed: () => Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (context) => const PackagesPage(),
+                            builder: (context) => const BookingPage(),
                           ),
                         ),
-                        child: const Text(
-                          'OUR PACKAGES',
-                          style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 16,
+                        child: const Padding(
+                          padding: EdgeInsets.symmetric(horizontal: 16),
+                          child: Text(
+                            'RESERVE NOW',
+                            style: TextStyle(
+                              fontWeight: FontWeight.w900,
+                              fontSize: 16,
+                              letterSpacing: 1.5,
+                            ),
                           ),
                         ),
                       ),
+                      if (!isMobile) ...[
+                        const SizedBox(width: 24),
+                        _AnimatedOutlinedButton(
+                          onPressed: () => Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const PackagesPage(),
+                            ),
+                          ),
+                          child: const Text(
+                            'VIEW PACKAGES',
+                            style: TextStyle(
+                              fontWeight: FontWeight.w900,
+                              fontSize: 16,
+                              letterSpacing: 1.5,
+                            ),
+                          ),
+                        ),
+                      ],
                     ],
-                  ],
+                  ),
                 ),
               ],
             ),

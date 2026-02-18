@@ -5,12 +5,10 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:lowgo_cab/utils/constants.dart';
 import 'package:lowgo_cab/models/booking_model.dart';
 
-/// ContactService — sends emails via Google Apps Script (free relay).
-/// Uses dart:js fetch with mode:'no-cors' to bypass browser CORS restriction.
-/// Sends both admin notification AND customer confirmation emails.
 class ContactService {
-  /// Core method: fires a no-cors fetch to Google Apps Script.
-  /// Supports sending to both admin and customer in one call.
+  // ─────────────────────────────────────────────────────────────────────────
+  // CORE SEND METHOD — sends two separate XHR requests (admin + customer)
+  // ─────────────────────────────────────────────────────────────────────────
   static Future<void> _sendEmail({
     required String adminSubject,
     required String adminBody,
@@ -20,45 +18,52 @@ class ContactService {
     String? customerBody,
   }) async {
     final String scriptUrl = AppConstants.googleScriptUrl;
+    if (scriptUrl.contains('REPLACE')) throw 'URL not configured';
 
-    if (scriptUrl.contains('REPLACE')) {
-      throw 'Google Apps Script URL not configured.\nSee lib/utils/secrets.dart for setup instructions.';
-    }
-
-    final Map<String, dynamic> payload = {
+    // ── 1. Admin Notification ──────────────────────────────────────────────
+    _xhrPost(scriptUrl, {
       'to': AppConstants.contactEmail,
       'subject': adminSubject,
       'body': adminBody,
       'replyTo': replyTo ?? '',
-      'customerEmail': customerEmail ?? '',
-      'customerSubject': customerSubject ?? '',
-      'customerBody': customerBody ?? '',
-    };
+    });
 
-    final String bodyJson = json.encode(json.encode(payload));
-
-    // Use JS fetch with mode:'no-cors' — bypasses CORS, request reaches Google.
-    // Response is opaque (unreadable) but email IS sent successfully.
-    js.context.callMethod('eval', [
-      '''
-      fetch("$scriptUrl", {
-        method: "POST",
-        mode: "no-cors",
-        headers: { "Content-Type": "application/json" },
-        body: $bodyJson
-      }).then(function() {
-        console.log("[LowGo Cab] Email dispatched to Google Apps Script");
-      }).catch(function(err) {
-        console.error("[LowGo Cab] Email fetch error:", err);
+    // ── 2. Customer Auto-Reply ─────────────────────────────────────────────
+    if (customerEmail != null && customerEmail.trim().isNotEmpty) {
+      await Future.delayed(const Duration(milliseconds: 300));
+      _xhrPost(scriptUrl, {
+        'to': customerEmail,
+        'subject': customerSubject ?? 'Thank you - LowGo Cab',
+        'body': customerBody ?? '<p>Thank you for contacting LowGo Cab!</p>',
+        'replyTo': AppConstants.contactEmail,
       });
-      ''',
-    ]);
+    }
 
-    await Future.delayed(const Duration(milliseconds: 500));
-    print('Email dispatched via Google Apps Script (no-cors mode)');
+    await Future.delayed(const Duration(milliseconds: 200));
   }
 
-  /// Sends Contact Form Email — Admin notification + Customer auto-reply
+  /// Fires an XMLHttpRequest POST with JSON payload via JS interop.
+  static void _xhrPost(String url, Map<String, dynamic> payload) {
+    // Encode payload to JSON and store in a global JS variable to avoid
+    // any string injection issues inside the eval.
+    js.context['_lgPayload'] = json.encode(payload);
+    js.context['_lgUrl'] = url;
+    js.context.callMethod('eval', [
+      '''
+      (function() {
+        var xhr = new XMLHttpRequest();
+        xhr.open("POST", window._lgUrl, true);
+        xhr.send(window._lgPayload);
+        console.log("[LowGo Cab] XHR sent to:", window._lgUrl);
+      })();
+      '''
+    ]);
+  }
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // PUBLIC API
+  // ─────────────────────────────────────────────────────────────────────────
+
   static Future<void> sendContactEmail({
     required String name,
     required String email,
@@ -66,49 +71,15 @@ class ContactService {
     required String message,
   }) async {
     await _sendEmail(
-      replyTo: email.isNotEmpty ? email : null,
+      replyTo: email,
       adminSubject: '[LowGo Cab] New Inquiry from $name',
-      adminBody:
-          '''
-        <div style="font-family:Arial,sans-serif;max-width:600px;margin:auto;padding:24px;border:1px solid #eee;border-radius:12px;">
-          <h2 style="color:#EE0B5E;">📩 New Contact Inquiry</h2>
-          <table style="width:100%;border-collapse:collapse;">
-            <tr><td style="padding:8px;color:#666;width:120px;"><b>Name</b></td><td style="padding:8px;">$name</td></tr>
-            <tr style="background:#f9f9f9;"><td style="padding:8px;color:#666;"><b>Email</b></td><td style="padding:8px;">${email.isEmpty ? 'Not provided' : email}</td></tr>
-            <tr><td style="padding:8px;color:#666;"><b>Phone</b></td><td style="padding:8px;">${phone.isEmpty ? 'Not provided' : phone}</td></tr>
-          </table>
-          <div style="margin-top:16px;padding:16px;background:#f9f9f9;border-radius:8px;">
-            <b style="color:#666;">Message:</b><p style="margin-top:8px;">$message</p>
-          </div>
-          <p style="margin-top:24px;color:#aaa;font-size:12px;">Sent via LowGo Cab website.</p>
-        </div>
-      ''',
-      // Customer confirmation
-      customerEmail: email.isNotEmpty ? email : null,
+      adminBody: _adminContactHtml(name, email, phone, message),
+      customerEmail: email,
       customerSubject: 'We received your message — LowGo Cab',
-      customerBody:
-          '''
-        <div style="font-family:Arial,sans-serif;max-width:600px;margin:auto;padding:24px;border:1px solid #eee;border-radius:12px;">
-          <div style="background:linear-gradient(135deg,#EE0B5E,#FF4D8D);padding:32px;border-radius:12px;text-align:center;margin-bottom:24px;">
-            <h1 style="color:white;margin:0;font-size:28px;">LowGo Cab 🚖</h1>
-            <p style="color:rgba(255,255,255,0.85);margin:8px 0 0;">Jaipur's Trusted Cab Service</p>
-          </div>
-          <h2 style="color:#1A1A1A;">Hi $name, we got your message! ✅</h2>
-          <p style="color:#555;line-height:1.7;">Thank you for reaching out to us. Our team has received your inquiry and will get back to you within <b>24 hours</b>.</p>
-          <div style="background:#f9f9f9;padding:16px;border-radius:8px;margin:20px 0;border-left:4px solid #EE0B5E;">
-            <b style="color:#666;">Your Message:</b>
-            <p style="margin-top:8px;color:#333;">$message</p>
-          </div>
-          <p style="color:#555;">In the meantime, you can reach us directly:</p>
-          <p style="color:#555;">📞 <b>${AppConstants.whatsappNumber}</b><br>📧 <b>${AppConstants.displayEmail}</b></p>
-          <hr style="border:none;border-top:1px solid #eee;margin:24px 0;">
-          <p style="color:#aaa;font-size:12px;text-align:center;">© LowGo Cab — Jaipur, Rajasthan, India</p>
-        </div>
-      ''',
+      customerBody: _customerContactHtml(name, message),
     );
   }
 
-  /// Sends Feedback Email — Admin notification + Customer thank-you
   static Future<void> sendFeedbackEmail({
     required String name,
     required String email,
@@ -116,137 +87,273 @@ class ContactService {
     required int rating,
     required String feedback,
   }) async {
-    final String stars = '⭐' * rating;
     await _sendEmail(
-      replyTo: email.isNotEmpty ? email : null,
-      adminSubject: '[LowGo Cab] $stars Feedback from $name',
-      adminBody:
-          '''
-        <div style="font-family:Arial,sans-serif;max-width:600px;margin:auto;padding:24px;border:1px solid #eee;border-radius:12px;">
-          <h2 style="color:#EE0B5E;">⭐ New Feedback Received</h2>
-          <div style="font-size:32px;text-align:center;margin:16px 0;">$stars</div>
-          <table style="width:100%;border-collapse:collapse;">
-            <tr><td style="padding:8px;color:#666;width:120px;"><b>Rating</b></td><td style="padding:8px;">$rating / 5</td></tr>
-            <tr style="background:#f9f9f9;"><td style="padding:8px;color:#666;"><b>Name</b></td><td style="padding:8px;">$name</td></tr>
-            <tr><td style="padding:8px;color:#666;"><b>Email</b></td><td style="padding:8px;">${email.isEmpty ? 'Not provided' : email}</td></tr>
-            <tr style="background:#f9f9f9;"><td style="padding:8px;color:#666;"><b>Phone</b></td><td style="padding:8px;">${phone.isEmpty ? 'Not provided' : phone}</td></tr>
-          </table>
-          <div style="margin-top:16px;padding:16px;background:#f9f9f9;border-radius:8px;">
-            <b style="color:#666;">Feedback:</b><p style="margin-top:8px;">$feedback</p>
-          </div>
-        </div>
-      ''',
-      // Customer thank-you (only if email provided)
-      customerEmail: email.isNotEmpty ? email : null,
-      customerSubject: 'Thank you for your feedback — LowGo Cab',
-      customerBody:
-          '''
-        <div style="font-family:Arial,sans-serif;max-width:600px;margin:auto;padding:24px;border:1px solid #eee;border-radius:12px;">
-          <div style="background:linear-gradient(135deg,#EE0B5E,#FF4D8D);padding:32px;border-radius:12px;text-align:center;margin-bottom:24px;">
-            <h1 style="color:white;margin:0;font-size:28px;">LowGo Cab 🚖</h1>
-            <p style="color:rgba(255,255,255,0.85);margin:8px 0 0;">Jaipur's Trusted Cab Service</p>
-          </div>
-          <h2 style="color:#1A1A1A;">Thank you, $name! $stars</h2>
-          <p style="color:#555;line-height:1.7;">We truly appreciate you taking the time to share your experience with us. Your <b>$rating-star feedback</b> means a lot to our team and helps us serve you better.</p>
-          <div style="background:#f9f9f9;padding:16px;border-radius:8px;margin:20px 0;border-left:4px solid #EE0B5E;">
-            <b style="color:#666;">Your Feedback:</b>
-            <p style="margin-top:8px;color:#333;">$feedback</p>
-          </div>
-          <p style="color:#555;">We look forward to serving you again on your next journey! 🙏</p>
-          <hr style="border:none;border-top:1px solid #eee;margin:24px 0;">
-          <p style="color:#aaa;font-size:12px;text-align:center;">© LowGo Cab — Jaipur, Rajasthan, India</p>
-        </div>
-      ''',
+      replyTo: email,
+      adminSubject: '[LowGo Cab] [$rating-Star] Feedback from $name',
+      adminBody: _adminFeedbackHtml(name, email, phone, rating, feedback),
+      customerEmail: email,
+      customerSubject: 'Thank you for your feedback - LowGo Cab',
+      customerBody: _customerFeedbackHtml(name, rating, feedback),
     );
   }
 
-  /// Sends Booking Email — Admin notification + Customer booking confirmation
   static Future<void> sendBookingEmail(Booking booking) async {
     await _sendEmail(
-      replyTo: booking.email.isNotEmpty ? booking.email : null,
+      replyTo: booking.email,
       adminSubject:
-          '[LowGo Cab] 🚖 New Booking: ${booking.packageSelected} by ${booking.name}',
-      adminBody:
-          '''
-        <div style="font-family:Arial,sans-serif;max-width:600px;margin:auto;padding:24px;border:1px solid #eee;border-radius:12px;">
-          <h2 style="color:#EE0B5E;">🚖 New Cab Booking Request</h2>
-          <table style="width:100%;border-collapse:collapse;">
-            <tr><td style="padding:8px;color:#666;width:120px;"><b>Name</b></td><td style="padding:8px;">${booking.name}</td></tr>
-            <tr style="background:#f9f9f9;"><td style="padding:8px;color:#666;"><b>Mobile</b></td><td style="padding:8px;">${booking.mobile}</td></tr>
-            <tr><td style="padding:8px;color:#666;"><b>Email</b></td><td style="padding:8px;">${booking.email.isEmpty ? 'Not provided' : booking.email}</td></tr>
-            <tr style="background:#f9f9f9;"><td style="padding:8px;color:#666;"><b>Package</b></td><td style="padding:8px;font-weight:bold;color:#EE0B5E;">${booking.packageSelected}</td></tr>
-            <tr><td style="padding:8px;color:#666;"><b>From</b></td><td style="padding:8px;">${booking.fromLocation}</td></tr>
-            <tr style="background:#f9f9f9;"><td style="padding:8px;color:#666;"><b>To</b></td><td style="padding:8px;">${booking.toLocation ?? 'N/A'}</td></tr>
-            <tr><td style="padding:8px;color:#666;"><b>Persons</b></td><td style="padding:8px;">${booking.numberOfPersons}</td></tr>
-          </table>
-        </div>
-      ''',
-      // Customer booking confirmation
-      customerEmail: booking.email.isNotEmpty ? booking.email : null,
-      customerSubject: 'Booking Confirmed — LowGo Cab 🚖',
-      customerBody:
-          '''
-        <div style="font-family:Arial,sans-serif;max-width:600px;margin:auto;padding:24px;border:1px solid #eee;border-radius:12px;">
-          <div style="background:linear-gradient(135deg,#EE0B5E,#FF4D8D);padding:32px;border-radius:12px;text-align:center;margin-bottom:24px;">
-            <h1 style="color:white;margin:0;font-size:28px;">LowGo Cab 🚖</h1>
-            <p style="color:rgba(255,255,255,0.85);margin:8px 0 0;">Jaipur's Trusted Cab Service</p>
-          </div>
-          <h2 style="color:#1A1A1A;">Booking Request Received! ✅</h2>
-          <p style="color:#555;line-height:1.7;">Hi <b>${booking.name}</b>, your booking request has been received. Our team will contact you shortly on <b>${booking.mobile}</b> to confirm the details.</p>
-          <div style="background:#f9f9f9;border-radius:12px;padding:20px;margin:20px 0;">
-            <h3 style="color:#EE0B5E;margin-top:0;">📋 Booking Summary</h3>
-            <table style="width:100%;border-collapse:collapse;">
-              <tr><td style="padding:6px;color:#666;width:100px;"><b>Package</b></td><td style="padding:6px;font-weight:bold;color:#EE0B5E;">${booking.packageSelected}</td></tr>
-              <tr style="background:white;"><td style="padding:6px;color:#666;"><b>From</b></td><td style="padding:6px;">${booking.fromLocation}</td></tr>
-              <tr><td style="padding:6px;color:#666;"><b>To</b></td><td style="padding:6px;">${booking.toLocation ?? 'N/A'}</td></tr>
-              <tr style="background:white;"><td style="padding:6px;color:#666;"><b>Persons</b></td><td style="padding:6px;">${booking.numberOfPersons}</td></tr>
-            </table>
-          </div>
-          <p style="color:#555;">Need help? Contact us directly:</p>
-          <p style="color:#555;">📞 <b>${AppConstants.whatsappNumber}</b><br>📧 <b>${AppConstants.displayEmail}</b></p>
-          <hr style="border:none;border-top:1px solid #eee;margin:24px 0;">
-          <p style="color:#aaa;font-size:12px;text-align:center;">© LowGo Cab — Jaipur, Rajasthan, India</p>
-        </div>
-      ''',
+          '[LowGo Cab] New Booking: ${booking.packageSelected ?? "General"} - ${booking.name}',
+      adminBody: _adminBookingHtml(booking),
+      customerEmail: booking.email,
+      customerSubject: 'Booking Confirmed - LowGo Cab',
+      customerBody: _customerBookingHtml(booking),
     );
   }
 
-  // Backwards compatibility alias
   static Future<void> sendAutoEmail(Booking booking) =>
       sendBookingEmail(booking);
 
-  /// Sends the same data via WhatsApp
   static Future<void> sendWhatsApp(Booking booking) async {
-    final String message = booking.toWhatsAppMessage();
     final String phone = AppConstants.whatsappNumber
         .replaceAll('+', '')
         .replaceAll(' ', '');
-    final Uri whatsappUri = Uri.parse(
-      'https://wa.me/$phone?text=${Uri.encodeComponent(message)}',
+    final Uri uri = Uri.parse(
+      'https://wa.me/$phone?text=${Uri.encodeComponent(booking.toWhatsAppMessage())}',
     );
-
-    if (await canLaunchUrl(whatsappUri)) {
-      await launchUrl(whatsappUri, mode: LaunchMode.externalApplication);
-    } else {
-      throw 'Could not launch WhatsApp';
-    }
+    if (await canLaunchUrl(uri))
+      await launchUrl(uri, mode: LaunchMode.externalApplication);
   }
 
-  /// Launch email app (Legacy fallback)
-  static Future<void> launchEmailApp({
-    required String subject,
-    required String body,
-  }) async {
-    final Uri emailLaunchUri = Uri(
-      scheme: 'mailto',
-      path: AppConstants.displayEmail,
-      queryParameters: {'subject': subject, 'body': body},
-    );
+  // ─────────────────────────────────────────────────────────────────────────
+  // BEAUTIFUL HTML EMAIL TEMPLATES
+  // ─────────────────────────────────────────────────────────────────────────
 
-    if (await canLaunchUrl(emailLaunchUri)) {
-      await launchUrl(emailLaunchUri);
-    } else {
-      throw 'Could not launch email app';
-    }
+  static String _emailWrapper({
+    required String preheader,
+    required String content,
+  }) =>
+      '''
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LowGo Cab</title>
+</head>
+<body style="margin:0;padding:0;background:#f4f4f8;font-family:Arial,Helvetica,sans-serif;">
+  <div style="display:none;max-height:0;overflow:hidden;">$preheader</div>
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#f4f4f8;padding:40px 20px;">
+    <tr><td align="center">
+      <table width="100%" cellpadding="0" cellspacing="0" style="max-width:620px;">
+
+        <!-- HEADER -->
+        <tr><td style="background:linear-gradient(135deg,#EE0B5E 0%,#FF4D8D 100%);border-radius:16px 16px 0 0;padding:40px 40px 32px;text-align:center;">
+          <img src="https://lowgocab-2026.web.app/assets/assets/logo.png" alt="LowGo Cab" width="80" height="80" style="border-radius:50%;margin-bottom:16px;display:block;margin-left:auto;margin-right:auto;">
+          <h1 style="color:#ffffff;margin:0;font-size:28px;font-weight:900;letter-spacing:-0.5px;">LowGo Cab</h1>
+          <p style="color:rgba(255,255,255,0.85);margin:6px 0 0;font-size:14px;letter-spacing:1px;">JAIPUR&apos;S PREMIUM CAB SERVICE</p>
+        </td></tr>
+
+        <!-- BODY -->
+        <tr><td style="background:#ffffff;padding:40px;">
+          $content
+        </td></tr>
+
+        <!-- SIGNATURE -->
+        <tr><td style="background:#1A1A1A;border-radius:0 0 16px 16px;padding:32px 40px;">
+          <table width="100%" cellpadding="0" cellspacing="0">
+            <tr>
+              <td style="border-right:1px solid #333;padding-right:24px;vertical-align:top;">
+                <p style="color:#EE0B5E;font-size:18px;font-weight:900;margin:0 0 4px;">LowGo Cab</p>
+                <p style="color:#aaa;font-size:12px;margin:0;">Jaipur&apos;s Trusted Travel Partner</p>
+              </td>
+              <td style="padding-left:24px;vertical-align:top;">
+                <p style="color:#ccc;font-size:12px;margin:0 0 4px;">Tel: ${AppConstants.whatsappNumber}</p>
+                <p style="color:#ccc;font-size:12px;margin:0 0 4px;">Email: ${AppConstants.displayEmail}</p>
+                <p style="color:#ccc;font-size:12px;margin:0;">Pratap Nagar, Jaipur, Rajasthan</p>
+              </td>
+            </tr>
+          </table>
+          <hr style="border:none;border-top:1px solid #333;margin:20px 0;">
+          <p style="color:#555;font-size:11px;text-align:center;margin:0;">© 2025 LowGo Cab. All rights reserved. | <a href="${AppConstants.instagramUrl}" style="color:#EE0B5E;text-decoration:none;">Instagram</a></p>
+        </td></tr>
+
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>''';
+
+  static String _infoRow(String label, String value) =>
+      '<tr><td style="padding:10px 16px;background:#f9f9f9;border-bottom:1px solid #eee;width:35%;color:#666;font-size:13px;font-weight:bold;">$label</td>'
+      '<td style="padding:10px 16px;background:#fff;border-bottom:1px solid #eee;color:#1A1A1A;font-size:14px;">$value</td></tr>';
+
+  static String _altRow(String label, String value) =>
+      '<tr><td style="padding:10px 16px;background:#fff;border-bottom:1px solid #eee;width:35%;color:#666;font-size:13px;font-weight:bold;">$label</td>'
+      '<td style="padding:10px 16px;background:#f9f9f9;border-bottom:1px solid #eee;color:#1A1A1A;font-size:14px;">$value</td></tr>';
+
+  // ── Admin: New Booking ──────────────────────────────────────────────────
+  static String _adminBookingHtml(Booking booking) => _emailWrapper(
+    preheader:
+        'New booking from ${booking.name} — ${booking.packageSelected ?? "General"}',
+    content:
+        '''
+      <div style="display:inline-block;background:#FFF0F5;border:1px solid #EE0B5E;border-radius:8px;padding:6px 16px;margin-bottom:24px;">
+        <span style="color:#EE0B5E;font-size:12px;font-weight:bold;letter-spacing:1px;">NEW BOOKING REQUEST</span>
+      </div>
+      <h2 style="color:#1A1A1A;margin:0 0 8px;font-size:24px;font-weight:900;">A new ride has been booked!</h2>
+      <p style="color:#666;font-size:15px;line-height:1.6;margin:0 0 28px;">Please review the booking details below and contact the customer to confirm.</p>
+      <table width="100%" cellpadding="0" cellspacing="0" style="border-radius:12px;overflow:hidden;border:1px solid #eee;">
+        ${_infoRow('Name', booking.name)}
+        ${_altRow('Mobile', booking.mobile)}
+        ${_infoRow('Email', booking.email.isEmpty ? 'Not provided' : booking.email)}
+        ${_altRow('Package', '<span style="color:#EE0B5E;font-weight:bold;">${booking.packageSelected ?? "General"}</span>')}
+        ${_infoRow('From', booking.fromLocation)}
+        ${_altRow('To', booking.toLocation)}
+        ${_infoRow('Persons', '${booking.numberOfPersons} person${booking.numberOfPersons > 1 ? "s" : ""}')}
+      </table>
+      <div style="margin-top:28px;background:#FFF0F5;border-left:4px solid #EE0B5E;border-radius:0 8px 8px 0;padding:16px 20px;">
+        <p style="margin:0;color:#EE0B5E;font-weight:bold;font-size:13px;">ACTION REQUIRED</p>
+        <p style="margin:6px 0 0;color:#555;font-size:13px;">Call or WhatsApp the customer at <strong>${booking.mobile}</strong> to confirm the booking.</p>
+      </div>
+    ''',
+  );
+
+  // ── Customer: Booking Confirmation ─────────────────────────────────────
+  static String _customerBookingHtml(Booking booking) => _emailWrapper(
+    preheader:
+        'Your LowGo Cab booking is confirmed! We will contact you shortly.',
+    content:
+        '''
+      <div style="text-align:center;margin-bottom:32px;">
+        <div style="display:inline-block;background:#E8F5E9;border-radius:50%;width:80px;height:80px;line-height:80px;margin-bottom:16px;">
+          <span style="color:#2E7D32;font-size:36px;font-weight:900;">&#10003;</span>
+        </div>
+        <h2 style="color:#1A1A1A;margin:0 0 8px;font-size:26px;font-weight:900;">Booking Received!</h2>
+        <p style="color:#666;font-size:15px;line-height:1.6;margin:0;">Hi <strong>${booking.name}</strong>, we have received your booking request and will contact you on <strong>${booking.mobile}</strong> shortly to confirm.</p>
+      </div>
+      <div style="background:#f9f9f9;border-radius:12px;padding:24px;margin-bottom:28px;">
+        <h3 style="color:#EE0B5E;margin:0 0 16px;font-size:14px;letter-spacing:1px;text-transform:uppercase;">Your Booking Summary</h3>
+        <table width="100%" cellpadding="0" cellspacing="0" style="border-radius:8px;overflow:hidden;border:1px solid #eee;">
+          ${_infoRow('Package', '<span style="color:#EE0B5E;font-weight:bold;">${booking.packageSelected ?? "General"}</span>')}
+          ${_altRow('From', booking.fromLocation)}
+          ${_infoRow('To', booking.toLocation)}
+          ${_altRow('Persons', '${booking.numberOfPersons} person${booking.numberOfPersons > 1 ? "s" : ""}')}
+        </table>
+      </div>
+      <div style="background:linear-gradient(135deg,#EE0B5E,#FF4D8D);border-radius:12px;padding:24px;text-align:center;margin-bottom:28px;">
+        <p style="color:rgba(255,255,255,0.85);font-size:13px;margin:0 0 8px;letter-spacing:1px;">NEED IMMEDIATE HELP?</p>
+        <p style="color:#fff;font-size:22px;font-weight:900;margin:0;">${AppConstants.whatsappNumber}</p>
+        <p style="color:rgba(255,255,255,0.75);font-size:12px;margin:6px 0 0;">Available 24/7 on WhatsApp &amp; Call</p>
+      </div>
+      <p style="color:#999;font-size:12px;text-align:center;line-height:1.6;margin:0;">You are receiving this email because you submitted a booking request on LowGo Cab. If this was not you, please ignore this email.</p>
+    ''',
+  );
+
+  // ── Admin: Contact Inquiry ──────────────────────────────────────────────
+  static String _adminContactHtml(
+    String name,
+    String email,
+    String phone,
+    String message,
+  ) => _emailWrapper(
+    preheader: 'New contact inquiry from $name',
+    content:
+        '''
+      <div style="display:inline-block;background:#E3F2FD;border:1px solid #1976D2;border-radius:8px;padding:6px 16px;margin-bottom:24px;">
+        <span style="color:#1976D2;font-size:12px;font-weight:bold;letter-spacing:1px;">NEW CONTACT INQUIRY</span>
+      </div>
+      <h2 style="color:#1A1A1A;margin:0 0 24px;font-size:22px;font-weight:900;">Someone wants to get in touch!</h2>
+      <table width="100%" cellpadding="0" cellspacing="0" style="border-radius:12px;overflow:hidden;border:1px solid #eee;margin-bottom:24px;">
+        ${_infoRow('Name', name)}
+        ${_altRow('Email', email.isEmpty ? 'Not provided' : email)}
+        ${_infoRow('Phone', phone.isEmpty ? 'Not provided' : phone)}
+      </table>
+      <div style="background:#f9f9f9;border-left:4px solid #1976D2;border-radius:0 8px 8px 0;padding:20px 24px;">
+        <p style="color:#666;font-size:12px;font-weight:bold;margin:0 0 8px;letter-spacing:1px;">MESSAGE</p>
+        <p style="color:#1A1A1A;font-size:15px;line-height:1.7;margin:0;">$message</p>
+      </div>
+    ''',
+  );
+
+  // ── Customer: Contact Auto-Reply ────────────────────────────────────────
+  static String _customerContactHtml(
+    String name,
+    String message,
+  ) => _emailWrapper(
+    preheader:
+        'We received your message and will get back to you within 24 hours.',
+    content:
+        '''
+      <h2 style="color:#1A1A1A;margin:0 0 8px;font-size:24px;font-weight:900;">Hi $name, we got your message!</h2>
+      <p style="color:#666;font-size:15px;line-height:1.7;margin:0 0 24px;">Thank you for reaching out to LowGo Cab. Our team has received your inquiry and will get back to you within <strong>24 hours</strong>.</p>
+      <div style="background:#f9f9f9;border-left:4px solid #EE0B5E;border-radius:0 8px 8px 0;padding:20px 24px;margin-bottom:28px;">
+        <p style="color:#666;font-size:12px;font-weight:bold;margin:0 0 8px;letter-spacing:1px;">YOUR MESSAGE</p>
+        <p style="color:#1A1A1A;font-size:14px;line-height:1.7;margin:0;">$message</p>
+      </div>
+      <p style="color:#666;font-size:14px;line-height:1.7;margin:0 0 8px;">In the meantime, you can reach us directly:</p>
+      <p style="color:#1A1A1A;font-size:14px;margin:0 0 4px;">Tel: <strong>${AppConstants.whatsappNumber}</strong></p>
+      <p style="color:#1A1A1A;font-size:14px;margin:0;">Email: <strong>${AppConstants.displayEmail}</strong></p>
+    ''',
+  );
+
+  // ── Admin: Feedback ─────────────────────────────────────────────────────
+  static String _adminFeedbackHtml(
+    String name,
+    String email,
+    String phone,
+    int rating,
+    String feedback,
+  ) {
+    final String stars = '*' * rating;
+    return _emailWrapper(
+      preheader: '[$rating-Star] Feedback from $name',
+      content:
+          '''
+        <div style="display:inline-block;background:#FFF8E1;border:1px solid #FFC107;border-radius:8px;padding:6px 16px;margin-bottom:24px;">
+          <span style="color:#F57F17;font-size:12px;font-weight:bold;letter-spacing:1px;">NEW FEEDBACK RECEIVED</span>
+        </div>
+        <h2 style="color:#1A1A1A;margin:0 0 8px;font-size:22px;font-weight:900;">Customer Feedback</h2>
+        <div style="text-align:center;background:#FFF8E1;border-radius:12px;padding:16px;margin:16px 0;">
+          <p style="color:#F57F17;font-size:32px;font-weight:900;margin:0;letter-spacing:4px;">$stars</p>
+          <p style="color:#F57F17;font-size:14px;margin:4px 0 0;font-weight:bold;">$rating out of 5 stars</p>
+        </div>
+        <table width="100%" cellpadding="0" cellspacing="0" style="border-radius:12px;overflow:hidden;border:1px solid #eee;margin-bottom:24px;">
+          ${_infoRow('Rating', '$rating / 5')}
+          ${_altRow('Name', name)}
+          ${_infoRow('Email', email.isEmpty ? 'Not provided' : email)}
+          ${_altRow('Phone', phone.isEmpty ? 'Not provided' : phone)}
+        </table>
+        <div style="background:#f9f9f9;border-left:4px solid #FFC107;border-radius:0 8px 8px 0;padding:20px 24px;">
+          <p style="color:#666;font-size:12px;font-weight:bold;margin:0 0 8px;letter-spacing:1px;">FEEDBACK</p>
+          <p style="color:#1A1A1A;font-size:15px;line-height:1.7;margin:0;">$feedback</p>
+        </div>
+      ''',
+    );
+  }
+
+  // ── Customer: Feedback Thank-You ────────────────────────────────────────
+  static String _customerFeedbackHtml(
+    String name,
+    int rating,
+    String feedback,
+  ) {
+    final String stars = '*' * rating;
+    return _emailWrapper(
+      preheader: 'Thank you for your $rating-star feedback, $name!',
+      content:
+          '''
+        <div style="text-align:center;margin-bottom:28px;">
+          <div style="background:#FFF8E1;border-radius:12px;padding:16px;margin-bottom:16px;">
+            <p style="color:#F57F17;font-size:32px;font-weight:900;margin:0;letter-spacing:4px;">$stars</p>
+          </div>
+          <h2 style="color:#1A1A1A;margin:0 0 8px;font-size:24px;font-weight:900;">Thank you, $name!</h2>
+          <p style="color:#666;font-size:15px;line-height:1.7;margin:0;">Your <strong>$rating-star feedback</strong> means the world to us. We are constantly working to improve our service and your input helps us do that.</p>
+        </div>
+        <div style="background:#f9f9f9;border-left:4px solid #FFC107;border-radius:0 8px 8px 0;padding:20px 24px;margin-bottom:28px;">
+          <p style="color:#666;font-size:12px;font-weight:bold;margin:0 0 8px;letter-spacing:1px;">YOUR FEEDBACK</p>
+          <p style="color:#1A1A1A;font-size:14px;line-height:1.7;margin:0;">$feedback</p>
+        </div>
+        <p style="color:#666;font-size:14px;text-align:center;line-height:1.7;margin:0;">We look forward to serving you again on your next journey through Jaipur!</p>
+      ''',
+    );
   }
 }

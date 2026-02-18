@@ -14,7 +14,8 @@ class FeedbackPage extends StatefulWidget {
   State<FeedbackPage> createState() => _FeedbackPageState();
 }
 
-class _FeedbackPageState extends State<FeedbackPage> {
+class _FeedbackPageState extends State<FeedbackPage>
+    with TickerProviderStateMixin {
   final _nameController = TextEditingController();
   final _emailController = TextEditingController();
   final _phoneController = TextEditingController();
@@ -22,12 +23,25 @@ class _FeedbackPageState extends State<FeedbackPage> {
   int _rating = 0;
   bool _isSubmitting = false;
 
+  late AnimationController _contentController;
+
+  @override
+  void initState() {
+    super.initState();
+    _contentController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1000),
+    );
+    _contentController.forward();
+  }
+
   @override
   void dispose() {
     _nameController.dispose();
     _emailController.dispose();
     _phoneController.dispose();
     _feedbackController.dispose();
+    _contentController.dispose();
     super.dispose();
   }
 
@@ -55,7 +69,6 @@ class _FeedbackPageState extends State<FeedbackPage> {
     setState(() => _isSubmitting = true);
 
     try {
-      // 1. Save to Backend (Firestore)
       await AppService.saveFeedback(
         name: _nameController.text,
         email: _emailController.text,
@@ -64,7 +77,6 @@ class _FeedbackPageState extends State<FeedbackPage> {
         feedback: _feedbackController.text,
       );
 
-      // 2. Send Email
       await ContactService.sendFeedbackEmail(
         name: _nameController.text,
         email: _emailController.text,
@@ -74,13 +86,11 @@ class _FeedbackPageState extends State<FeedbackPage> {
       );
 
       if (mounted) {
-        // Clear form
         _nameController.clear();
         _emailController.clear();
         _phoneController.clear();
         _feedbackController.clear();
         setState(() => _rating = 0);
-
         _showSuccessDialog();
       }
     } catch (e) {
@@ -93,9 +103,7 @@ class _FeedbackPageState extends State<FeedbackPage> {
         );
       }
     } finally {
-      if (mounted) {
-        setState(() => _isSubmitting = false);
-      }
+      if (mounted) setState(() => _isSubmitting = false);
     }
   }
 
@@ -150,7 +158,7 @@ class _FeedbackPageState extends State<FeedbackPage> {
       body: SingleChildScrollView(
         child: Column(
           children: [
-            _buildHero(isMobile),
+            _buildPremiumHero(isMobile),
             Padding(
               padding: EdgeInsets.symmetric(
                 horizontal: isMobile ? 16 : 24,
@@ -159,7 +167,10 @@ class _FeedbackPageState extends State<FeedbackPage> {
               child: Center(
                 child: Container(
                   constraints: const BoxConstraints(maxWidth: 800),
-                  child: _buildFeedbackForm(isMobile),
+                  child: _fadeIn(
+                    child: _buildFeedbackForm(isMobile),
+                    delay: 0.1,
+                  ),
                 ),
               ),
             ),
@@ -170,46 +181,72 @@ class _FeedbackPageState extends State<FeedbackPage> {
     );
   }
 
-  Widget _buildHero(bool isMobile) {
+  Widget _fadeIn({required Widget child, double delay = 0.0}) {
+    final animation = CurvedAnimation(
+      parent: _contentController,
+      curve: Interval(delay, 1.0, curve: Curves.easeOut),
+    );
+    return FadeTransition(
+      opacity: animation,
+      child: SlideTransition(
+        position: Tween<Offset>(
+          begin: const Offset(0, 0.1),
+          end: Offset.zero,
+        ).animate(animation),
+        child: child,
+      ),
+    );
+  }
+
+  Widget _buildPremiumHero(bool isMobile) {
     return Container(
       width: double.infinity,
-      padding: EdgeInsets.symmetric(
-        vertical: isMobile ? 60 : 100,
-        horizontal: 24,
+      height: isMobile ? 250 : 350,
+      decoration: const BoxDecoration(
+        image: DecorationImage(
+          image: NetworkImage(
+            'https://images.unsplash.com/photo-1552664730-d307ca884978?w=1600',
+          ),
+          fit: BoxFit.cover,
+        ),
       ),
-      decoration: const BoxDecoration(gradient: AppConstants.primaryGradient),
-      child: Column(
-        children: [
-          const Text(
-            'WE VALUE YOUR OPINION',
-            style: TextStyle(
-              color: Colors.white,
-              fontWeight: FontWeight.bold,
-              letterSpacing: 3,
-              fontSize: 12,
-            ),
+      child: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [
+              Colors.black.withOpacity(0.85),
+              Colors.black.withOpacity(0.3),
+            ],
+            begin: Alignment.bottomCenter,
+            end: Alignment.topCenter,
           ),
-          const SizedBox(height: 16),
-          Text(
-            'Share Your Experience',
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              fontSize: isMobile ? 32 : 48,
-              fontWeight: FontWeight.w900,
-              color: Colors.white,
-              height: 1.1,
-            ),
+        ),
+        child: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text(
+                'YOUR FEEDBACK MATTERS',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                  letterSpacing: 3,
+                  fontSize: isMobile ? 10 : 12,
+                ),
+              ),
+              const SizedBox(height: 16),
+              Text(
+                'Help Us Improve',
+                style: TextStyle(
+                  fontSize: isMobile ? 36 : 56,
+                  fontWeight: FontWeight.w900,
+                  color: Colors.white,
+                  letterSpacing: -1,
+                ),
+              ),
+            ],
           ),
-          const SizedBox(height: 24),
-          Text(
-            'Help us improve our services better for you.',
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              fontSize: isMobile ? 16 : 18,
-              color: Colors.white70,
-            ),
-          ),
-        ],
+        ),
       ),
     );
   }
@@ -219,11 +256,11 @@ class _FeedbackPageState extends State<FeedbackPage> {
       padding: EdgeInsets.all(isMobile ? 24 : 48),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(30),
+        borderRadius: BorderRadius.circular(32),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.08),
-            blurRadius: 50,
+            color: Colors.black.withOpacity(0.06),
+            blurRadius: 60,
             offset: const Offset(0, 20),
           ),
         ],
@@ -231,52 +268,72 @@ class _FeedbackPageState extends State<FeedbackPage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            'Rate Your Experience',
+          const Text(
+            'SHARE YOUR EXPERIENCE',
             style: TextStyle(
-              fontSize: isMobile ? 20 : 24,
+              color: AppConstants.primaryColor,
               fontWeight: FontWeight.bold,
+              letterSpacing: 1.5,
+              fontSize: 12,
+            ),
+          ),
+          const SizedBox(height: 12),
+          const Text(
+            'How was your ride?',
+            style: TextStyle(
+              fontSize: 28,
+              fontWeight: FontWeight.w900,
+              color: AppConstants.secondaryColor,
+            ),
+          ),
+          const SizedBox(height: 32),
+          const Text(
+            'SELECT RATING',
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+              fontSize: 10,
+              color: Colors.grey,
+              letterSpacing: 1,
             ),
           ),
           const SizedBox(height: 16),
           _buildStarRating(),
-          const SizedBox(height: 32),
-          _field('Your Name', Icons.person_outline, _nameController),
-          const SizedBox(height: 20),
-          _field('Email Address', Icons.email_outlined, _emailController),
-          const SizedBox(height: 20),
-          _field(
-            'Phone Number (Optional)',
-            Icons.phone_android_outlined,
-            _phoneController,
+          const SizedBox(height: 40),
+          _premiumField('Full Name', Icons.person_outline, _nameController),
+          const SizedBox(height: 24),
+          _premiumField(
+            'Email Address',
+            Icons.email_outlined,
+            _emailController,
           ),
-          const SizedBox(height: 20),
-          _field(
-            'Your Feedback',
-            Icons.chat_bubble_outline,
+          const SizedBox(height: 24),
+          _premiumField(
+            'Message & Feedback',
+            Icons.message_outlined,
             _feedbackController,
             maxLines: 5,
           ),
-          const SizedBox(height: 40),
+          const SizedBox(height: 48),
           SizedBox(
             width: double.infinity,
+            height: 64,
             child: ElevatedButton(
               onPressed: _isSubmitting ? null : _submitFeedback,
               style: ElevatedButton.styleFrom(
-                padding: EdgeInsets.symmetric(vertical: isMobile ? 18 : 22),
+                backgroundColor: AppConstants.secondaryColor,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                ),
               ),
               child: _isSubmitting
-                  ? const SizedBox(
-                      height: 20,
-                      width: 20,
-                      child: CircularProgressIndicator(
-                        color: Colors.white,
-                        strokeWidth: 2,
-                      ),
-                    )
+                  ? const CircularProgressIndicator(color: Colors.white)
                   : const Text(
                       'SUBMIT FEEDBACK',
-                      style: TextStyle(letterSpacing: 1.2),
+                      style: TextStyle(
+                        fontWeight: FontWeight.w900,
+                        letterSpacing: 1.5,
+                        fontSize: 15,
+                      ),
                     ),
             ),
           ),
@@ -287,33 +344,73 @@ class _FeedbackPageState extends State<FeedbackPage> {
 
   Widget _buildStarRating() {
     return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: List.generate(5, (index) {
-        return IconButton(
-          onPressed: () => setState(() => _rating = index + 1),
-          icon: Icon(
-            index < _rating ? Icons.star : Icons.star_border,
-            color: Colors.amber,
-            size: 40,
+        int starValue = index + 1;
+        bool active = _rating >= starValue;
+        return GestureDetector(
+          onTap: () => setState(() => _rating = starValue),
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 200),
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: active
+                  ? AppConstants.primaryColor
+                  : Colors.grey.withOpacity(0.05),
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: Icon(
+              active ? Icons.star : Icons.star_border,
+              color: active ? Colors.white : Colors.grey,
+              size: 32,
+            ),
           ),
         );
       }),
     );
   }
 
-  Widget _field(
+  Widget _premiumField(
     String label,
     IconData icon,
     TextEditingController controller, {
     int maxLines = 1,
   }) {
-    return TextField(
-      controller: controller,
-      maxLines: maxLines,
-      decoration: InputDecoration(
-        labelText: label,
-        prefixIcon: Icon(icon, size: 20),
-      ),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label.toUpperCase(),
+          style: const TextStyle(
+            fontWeight: FontWeight.bold,
+            fontSize: 10,
+            color: Colors.grey,
+            letterSpacing: 1,
+          ),
+        ),
+        const SizedBox(height: 8),
+        TextField(
+          controller: controller,
+          maxLines: maxLines,
+          style: const TextStyle(fontWeight: FontWeight.bold),
+          decoration: InputDecoration(
+            prefixIcon: Icon(icon, color: AppConstants.primaryColor, size: 20),
+            fillColor: Colors.grey.withOpacity(0.04),
+            filled: true,
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(16),
+              borderSide: BorderSide.none,
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(16),
+              borderSide: const BorderSide(
+                color: AppConstants.primaryColor,
+                width: 2,
+              ),
+            ),
+          ),
+        ),
+      ],
     );
   }
 
@@ -347,7 +444,7 @@ class _FeedbackPageState extends State<FeedbackPage> {
             ),
           ),
           ListTile(
-            title: const Text('GIVE FEEDBACK'),
+            title: const Text('CONTACT US'),
             onTap: () => Navigator.pop(context),
           ),
         ],

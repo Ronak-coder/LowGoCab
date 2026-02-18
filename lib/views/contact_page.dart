@@ -7,6 +7,7 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:lowgo_cab/services/contact_service.dart';
 import 'package:lowgo_cab/views/home_page.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:lowgo_cab/services/booking_service.dart';
 
 class ContactPage extends StatefulWidget {
   const ContactPage({super.key});
@@ -48,6 +49,15 @@ class _ContactPageState extends State<ContactPage> {
     setState(() => _isSubmitting = true);
 
     try {
+      // 1. Save to Backend (Firestore)
+      await AppService.saveInquiry(
+        name: _nameController.text,
+        email: _emailController.text,
+        phone: _phoneController.text,
+        message: _messageController.text,
+      );
+
+      // 2. Send Email
       await ContactService.sendContactEmail(
         name: _nameController.text,
         email: _emailController.text,

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:lowgo_cab/utils/constants.dart';
 import 'package:lowgo_cab/models/booking_model.dart';
 import 'package:lowgo_cab/services/contact_service.dart';
+import 'package:lowgo_cab/services/booking_service.dart';
 import 'package:lowgo_cab/widgets/responsive_layout.dart';
 import 'package:lowgo_cab/widgets/custom_header.dart';
 import 'package:lowgo_cab/widgets/custom_footer.dart';
@@ -53,13 +54,21 @@ class _BookingPageState extends State<BookingPage> {
         // Simulate a modern "sending" feel
         await Future.delayed(const Duration(seconds: 1));
 
+        // 1. Save to Backend (Firestore)
+        await AppService.saveBooking(booking);
+
+        // 2. Send Notifications
         if (isEmail) {
+          // Send email (admin + customer confirmation)
           await ContactService.sendAutoEmail(booking);
+          // Also open WhatsApp so admin gets instant notification
+          await ContactService.sendWhatsApp(booking);
         } else {
+          // WhatsApp only
           await ContactService.sendWhatsApp(booking);
         }
 
-        _showSuccessDialog();
+        _showSuccessDialog(isEmail);
       } catch (e) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red),
@@ -70,7 +79,7 @@ class _BookingPageState extends State<BookingPage> {
     }
   }
 
-  void _showSuccessDialog() {
+  void _showSuccessDialog(bool isEmail) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -82,18 +91,51 @@ class _BookingPageState extends State<BookingPage> {
             size: 60,
           ),
         ),
-        content: const Column(
+        content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text(
-              'Request Sent!',
+            const Text(
+              'Booking Request Sent! 🎉',
               style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
-            ),
-            SizedBox(height: 12),
-            Text(
-              'Your inquiry has been sent. Our team will contact you shortly.',
               textAlign: TextAlign.center,
-              style: TextStyle(color: Colors.grey),
+            ),
+            const SizedBox(height: 12),
+            if (isEmail) ...[
+              _notifRow(
+                Icons.email_rounded,
+                Colors.blue,
+                'Confirmation email sent to you',
+              ),
+              const SizedBox(height: 8),
+              _notifRow(
+                Icons.mark_chat_read_rounded,
+                const Color(0xFF25D366),
+                'WhatsApp notification sent to admin',
+              ),
+              const SizedBox(height: 8),
+              _notifRow(
+                Icons.storage_rounded,
+                AppConstants.primaryColor,
+                'Booking saved to our system',
+              ),
+            ] else ...[
+              _notifRow(
+                Icons.mark_chat_read_rounded,
+                const Color(0xFF25D366),
+                'WhatsApp message sent to admin',
+              ),
+              const SizedBox(height: 8),
+              _notifRow(
+                Icons.storage_rounded,
+                AppConstants.primaryColor,
+                'Booking saved to our system',
+              ),
+            ],
+            const SizedBox(height: 16),
+            const Text(
+              'Our team will contact you shortly!',
+              textAlign: TextAlign.center,
+              style: TextStyle(color: Colors.grey, fontSize: 13),
             ),
           ],
         ),
@@ -107,6 +149,21 @@ class _BookingPageState extends State<BookingPage> {
           ),
         ],
       ),
+    );
+  }
+
+  Widget _notifRow(IconData icon, Color color, String text) {
+    return Row(
+      children: [
+        Icon(icon, color: color, size: 18),
+        const SizedBox(width: 10),
+        Expanded(
+          child: Text(
+            text,
+            style: const TextStyle(fontSize: 13, color: Colors.black87),
+          ),
+        ),
+      ],
     );
   }
 
@@ -128,8 +185,24 @@ class _BookingPageState extends State<BookingPage> {
               ),
               child: Center(
                 child: Container(
-                  constraints: const BoxConstraints(maxWidth: 800),
-                  child: Column(children: [_buildFormCard(isMobile)]),
+                  constraints: const BoxConstraints(maxWidth: 1200),
+                  child: ResponsiveLayout(
+                    mobile: Column(
+                      children: [
+                        _buildFormCard(isMobile),
+                        const SizedBox(height: 40),
+                        _buildWhyChooseUs(isMobile),
+                      ],
+                    ),
+                    desktop: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Expanded(flex: 6, child: _buildFormCard(isMobile)),
+                        const SizedBox(width: 40),
+                        Expanded(flex: 4, child: _buildWhyChooseUs(isMobile)),
+                      ],
+                    ),
+                  ),
                 ),
               ),
             ),
@@ -394,6 +467,100 @@ class _BookingPageState extends State<BookingPage> {
           ),
         ),
       ],
+    );
+  }
+
+  Widget _buildWhyChooseUs(bool isMobile) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          'Why Book With Us?',
+          style: TextStyle(fontSize: 24, fontWeight: FontWeight.w900),
+        ),
+        const SizedBox(height: 24),
+        _featureItem(
+          Icons.verified_user_rounded,
+          'Verified Drivers',
+          'All our drivers are background checked and professionally trained.',
+        ),
+        _featureItem(
+          Icons.price_check_rounded,
+          'Best Price Guaranteed',
+          'Transparent pricing with zero hidden charges for every journey.',
+        ),
+        _featureItem(
+          Icons.support_agent_rounded,
+          '24/7 Dedicated Support',
+          'We are always available to help you with your booking needs.',
+        ),
+        _featureItem(
+          Icons.directions_car_rounded,
+          'Premium Fleet',
+          'Travel in comfort with our well-maintained, clean cars.',
+        ),
+        const SizedBox(height: 40),
+        Container(
+          padding: const EdgeInsets.all(24),
+          decoration: BoxDecoration(
+            color: AppConstants.primaryColor.withOpacity(0.05),
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(
+              color: AppConstants.primaryColor.withOpacity(0.1),
+            ),
+          ),
+          child: const Column(
+            children: [
+              Icon(Icons.lock_outline, color: AppConstants.primaryColor),
+              SizedBox(height: 12),
+              Text(
+                'Your data is secure. We use encrypted transmission for all booking requests.',
+                textAlign: TextAlign.center,
+                style: TextStyle(fontSize: 13, color: Colors.grey),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _featureItem(IconData icon, String title, String desc) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 24),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: AppConstants.primaryColor.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Icon(icon, color: AppConstants.primaryColor, size: 24),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 17,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  desc,
+                  style: const TextStyle(color: Colors.grey, fontSize: 14),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
 

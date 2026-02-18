@@ -1,10 +1,32 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
+
+    // Allow public write-only access to bookings (no auth required for cab booking)
+    match /bookings/{document=**} {
+      allow create: if true;
+      allow read, update, delete: if false;
+    }
+
+    // Allow public write-only access to contact inquiries
+    match /inquiries/{document=**} {
+      allow create: if true;
+      allow read, update, delete: if false;
+    }
+
+    // Allow public write-only access to feedback
+    match /feedback/{document=**} {
+      allow create: if true;
+      allow read, update, delete: if false;
+    }
+
+    // Mail collection (used by Firebase Extensions for email sending)
     match /mail/{document=**} {
       allow create: if true;
-      allow read, update, delete: if false; 
+      allow read, update, delete: if false;
     }
+
+    // Deny everything else
     match /{document=**} {
       allow read, write: if false;
     }

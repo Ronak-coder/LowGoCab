@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'secrets.dart';
 
 class AppConstants {
   static const String appName = 'LowGo Cab';
@@ -11,10 +12,9 @@ class AppConstants {
       'pragyanknscspl@gmail.com'; // Backend/Admin
   static const String displayEmail = 'support@lowgocab.online'; // UI Display
 
-  // Brevo (Sendinblue) Configuration (For Free Auto-Emails - 300/day)
-  // Get your free key at https://onboarding.brevo.com/account/api
-  static const String brevoApiKey =
-      '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';
+  // Email via Google Apps Script (free relay using your Gmail)
+  // See lib/utils/secrets.dart for setup instructions
+  static const String googleScriptUrl = AppSecrets.googleScriptUrl;
 
   // Sightseeing Cab in Jaipur Inspired Palette - Enhanced for Modern Feel
   static const Color primaryColor = Color(0xFFEE0B5E); // Vibrant Pink/Magenta

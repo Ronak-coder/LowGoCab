@@ -4,6 +4,7 @@ import 'package:lowgo_cab/widgets/custom_header.dart';
 import 'package:lowgo_cab/widgets/custom_footer.dart';
 import 'package:lowgo_cab/widgets/responsive_layout.dart';
 import 'package:lowgo_cab/services/contact_service.dart';
+import 'package:lowgo_cab/services/booking_service.dart';
 import 'package:lowgo_cab/views/home_page.dart';
 
 class FeedbackPage extends StatefulWidget {
@@ -54,6 +55,16 @@ class _FeedbackPageState extends State<FeedbackPage> {
     setState(() => _isSubmitting = true);
 
     try {
+      // 1. Save to Backend (Firestore)
+      await AppService.saveFeedback(
+        name: _nameController.text,
+        email: _emailController.text,
+        phone: _phoneController.text,
+        rating: _rating,
+        feedback: _feedbackController.text,
+      );
+
+      // 2. Send Email
       await ContactService.sendFeedbackEmail(
         name: _nameController.text,
         email: _emailController.text,

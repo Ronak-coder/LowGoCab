@@ -5,91 +5,108 @@ import 'package:lowgo_cab/widgets/custom_header.dart';
 import 'package:lowgo_cab/widgets/custom_footer.dart';
 import 'booking_page.dart';
 
-class PackagesPage extends StatelessWidget {
+class PackagesPage extends StatefulWidget {
   const PackagesPage({super.key});
 
   @override
+  State<PackagesPage> createState() => _PackagesPageState();
+}
+
+class _PackagesPageState extends State<PackagesPage>
+    with TickerProviderStateMixin {
+  late AnimationController _contentController;
+
+  final List<Map<String, dynamic>> tours = [
+    {
+      'title': 'One Day Jaipur Sightseeing Tour',
+      'price': '₹1,500',
+      'desc': 'Detailed tour of Amer Fort, Jal Mahal, Hawa Mahal and more.',
+      'image': 'assets/images/JaipurTour.png',
+      'duration': '12 Hours',
+      'location': 'Jaipur City',
+    },
+    {
+      'title': 'Jaipur to Khatu Shyam Ji',
+      'price': '₹2,199',
+      'desc':
+          'One Day Trip from Jaipur to Khatu Shyam Ji Temple with Toll and Parking',
+      'image': 'assets/images/jpr.png',
+      'duration': '8 Hours',
+      'location': 'Jaipur City',
+    },
+    {
+      'title': 'Same Day Agra Tour From Jaipur',
+      'price': '₹5,500',
+      'desc': 'Visit the Taj Mahal and Agra Fort in a one day excursion.',
+      'image':
+          'https://images.unsplash.com/photo-1524492412937-b28074a5d7da?auto=format&fit=crop&q=80&w=800',
+      'duration': 'Full Day',
+      'location': 'Agra',
+    },
+  ];
+
+  final List<Map<String, dynamic>> cabs = [
+    {
+      'model': 'Toyota Etios/Swift Dzire',
+      'rate': '10/Km',
+      'seats': '4',
+      'type': 'Sedan',
+      'image': 'assets/images/Dzire.png',
+    },
+    {
+      'model': 'Maruti Ertiga',
+      'rate': '13/Km',
+      'seats': '5+1',
+      'type': 'MPV',
+      'image': 'assets/images/ertiga.png',
+    },
+    {
+      'model': 'Toyota Innova',
+      'rate': '16/Km',
+      'seats': '6+1',
+      'type': 'MPV',
+      'image': 'assets/images/innova.png',
+    },
+    {
+      'model': 'Toyota Crysta',
+      'rate': '18/Km',
+      'seats': '7+1',
+      'type': 'Luxury MPV',
+      'image': 'assets/images/innova.png',
+    },
+  ];
+
+  @override
+  void initState() {
+    super.initState();
+    _contentController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1000),
+    );
+    _contentController.forward();
+  }
+
+  @override
+  void dispose() {
+    _contentController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final List<Map<String, dynamic>> tours = [
-      {
-        'title': 'One Day Jaipur Sightseeing Tour',
-        'price': '₹1,500',
-        'desc': 'Detailed tour of Amer Fort, Jal Mahal, Hawa Mahal and more.',
-        'image':
-            'https://images.unsplash.com/photo-1599661046289-e31897856741?auto=format&fit=crop&q=80&w=800',
-        'duration': '8 Hours',
-        'location': 'Jaipur City',
-      },
-      {
-        'title': 'Rajasthan Royal Tour Package',
-        'price': '₹4,500',
-        'desc':
-            'Experience the royalty of Rajasthan across multiple heritage cities.',
-        'image':
-            'https://images.unsplash.com/photo-1524492412937-b28074a5d7da?auto=format&fit=crop&q=80&w=800',
-        'duration': '3 Days',
-        'location': 'Rajasthan',
-      },
-      {
-        'title': 'Same Day Agra Tour From Jaipur',
-        'price': '₹5,500',
-        'desc': 'Visit the Taj Mahal and Agra Fort in a one day excursion.',
-        'image':
-            'https://images.unsplash.com/photo-1564507592333-c60657451ddc?auto=format&fit=crop&q=80&w=800',
-        'duration': 'Full Day',
-        'location': 'Agra',
-      },
-      {
-        'title': 'Jodhpur Udaipur 4 Days Tour',
-        'price': '₹12,000',
-        'desc':
-            'Explore the blue city and the city of lakes in this premium package.',
-        'image':
-            'https://images.unsplash.com/photo-1603262110263-fb0112e7cc33?auto=format&fit=crop&q=80&w=800',
-        'duration': '4 Days',
-        'location': 'Rajasthan',
-      },
-    ];
-
-    final List<Map<String, dynamic>> cabs = [
-      {
-        'model': 'Toyota Etios',
-        'rate': '11/Km',
-        'seats': '4+1',
-        'type': 'Sedan',
-      },
-      {
-        'model': 'Toyota Innova',
-        'rate': '16/Km',
-        'seats': '6+1',
-        'type': 'MPV',
-      },
-      {
-        'model': 'Toyota Crysta',
-        'rate': '18/Km',
-        'seats': '7+1',
-        'type': 'Luxury MPV',
-      },
-      {
-        'model': 'Tempo Traveller',
-        'rate': '27/Km',
-        'seats': '12+1',
-        'type': 'Mini Bus',
-      },
-    ];
-
+    final isMobile = ResponsiveLayout.isMobile(context);
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: const CustomHeader(),
       body: SingleChildScrollView(
         child: Column(
           children: [
-            _buildModernHero(),
+            _buildPremiumHero(isMobile),
             const SizedBox(height: 80),
             _sectionTitle('Popular Tour Packages'),
-            _buildTourGrid(tours, context),
+            _buildTourGrid(tours, context, isMobile),
             const SizedBox(height: 100),
-            _buildTaxiExperience(cabs, context),
+            _buildTaxiExperience(cabs, context, isMobile),
             const CustomFooter(),
           ],
         ),
@@ -97,14 +114,31 @@ class PackagesPage extends StatelessWidget {
     );
   }
 
-  Widget _buildModernHero() {
+  Widget _fadeIn({required Widget child, double delay = 0.0}) {
+    final animation = CurvedAnimation(
+      parent: _contentController,
+      curve: Interval(delay, 1.0, curve: Curves.easeOut),
+    );
+    return FadeTransition(
+      opacity: animation,
+      child: SlideTransition(
+        position: Tween<Offset>(
+          begin: const Offset(0, 0.05),
+          end: Offset.zero,
+        ).animate(animation),
+        child: child,
+      ),
+    );
+  }
+
+  Widget _buildPremiumHero(bool isMobile) {
     return Container(
       width: double.infinity,
-      height: 400,
+      height: isMobile ? 300 : 450,
       decoration: const BoxDecoration(
         image: DecorationImage(
           image: NetworkImage(
-            'https://images.unsplash.com/photo-1526772662000-3f88f10405ff?w=1600', // Premium travel road
+            'https://images.unsplash.com/photo-1526772662000-3f88f10405ff?w=1600',
           ),
           fit: BoxFit.cover,
         ),
@@ -116,31 +150,31 @@ class PackagesPage extends StatelessWidget {
             end: Alignment.bottomCenter,
             colors: [
               Colors.black.withOpacity(0.3),
-              Colors.black.withOpacity(0.8),
+              Colors.black.withOpacity(0.85),
             ],
           ),
         ),
-        child: const Center(
+        child: Center(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Text(
+              const Text(
                 'UNFORGETTABLE JOURNEYS',
                 style: TextStyle(
-                  color: AppConstants.accentColor,
-                  fontSize: 16,
+                  color: Colors.white,
                   fontWeight: FontWeight.bold,
                   letterSpacing: 4,
+                  fontSize: 12,
                 ),
               ),
-              SizedBox(height: 16),
+              const SizedBox(height: 16),
               Text(
                 'Our Tour Packages',
                 style: TextStyle(
                   color: Colors.white,
-                  fontSize: 56,
+                  fontSize: isMobile ? 44 : 72,
                   fontWeight: FontWeight.w900,
-                  letterSpacing: 1.5,
+                  letterSpacing: -1.5,
                 ),
               ),
             ],
@@ -163,14 +197,14 @@ class PackagesPage extends StatelessWidget {
         ),
         const SizedBox(height: 12),
         Container(
-          width: 60,
+          width: 80,
           height: 4,
           decoration: BoxDecoration(
-            color: AppConstants.primaryColor,
+            gradient: AppConstants.primaryGradient,
             borderRadius: BorderRadius.circular(2),
           ),
         ),
-        const SizedBox(height: 50),
+        const SizedBox(height: 60),
       ],
     );
   }
@@ -178,6 +212,7 @@ class PackagesPage extends StatelessWidget {
   Widget _buildTourGrid(
     List<Map<String, dynamic>> tours,
     BuildContext context,
+    bool isMobile,
   ) {
     return Center(
       child: Container(
@@ -204,13 +239,13 @@ class PackagesPage extends StatelessWidget {
         crossAxisCount: crossAxisCount,
         crossAxisSpacing: 32,
         mainAxisSpacing: 40,
-        childAspectRatio: 0.78,
+        childAspectRatio: crossAxisCount == 1 ? 0.85 : 0.72,
       ),
       itemCount: tours.length,
-      itemBuilder: (context, index) {
-        final tour = tours[index];
-        return _buildTourCard(tour, context);
-      },
+      itemBuilder: (context, index) => _fadeIn(
+        child: _buildTourCard(tours[index], context),
+        delay: index * 0.1,
+      ),
     );
   }
 
@@ -222,7 +257,7 @@ class PackagesPage extends StatelessWidget {
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.06),
-            blurRadius: 20,
+            blurRadius: 40,
             offset: const Offset(0, 10),
           ),
         ],
@@ -236,24 +271,32 @@ class PackagesPage extends StatelessWidget {
               child: Stack(
                 fit: StackFit.expand,
                 children: [
-                  Image.network(tour['image'], fit: BoxFit.cover),
+                  tour['image'].startsWith('http')
+                      ? Image.network(tour['image'], fit: BoxFit.cover)
+                      : Image.asset(tour['image'], fit: BoxFit.cover),
                   Positioned(
                     top: 20,
                     right: 20,
                     child: Container(
                       padding: const EdgeInsets.symmetric(
-                        horizontal: 14,
-                        vertical: 8,
+                        horizontal: 16,
+                        vertical: 10,
                       ),
                       decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(10),
+                        color: AppConstants.primaryColor,
+                        borderRadius: BorderRadius.circular(12),
+                        boxShadow: [
+                          BoxShadow(
+                            color: AppConstants.primaryColor.withOpacity(0.4),
+                            blurRadius: 10,
+                          ),
+                        ],
                       ),
                       child: Text(
                         tour['price'],
                         style: const TextStyle(
                           fontWeight: FontWeight.w900,
-                          color: AppConstants.primaryColor,
+                          color: Colors.white,
                           fontSize: 16,
                         ),
                       ),
@@ -265,25 +308,25 @@ class PackagesPage extends StatelessWidget {
             Expanded(
               flex: 5,
               child: Padding(
-                padding: const EdgeInsets.all(24),
+                padding: const EdgeInsets.all(28),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
                       tour['title'],
                       style: const TextStyle(
-                        fontSize: 20,
+                        fontSize: 19,
                         fontWeight: FontWeight.w900,
                         height: 1.2,
                       ),
                     ),
-                    const SizedBox(height: 12),
+                    const SizedBox(height: 8),
                     Text(
                       tour['desc'],
                       maxLines: 2,
                       style: TextStyle(
                         color: Colors.grey[600],
-                        fontSize: 14,
+                        fontSize: 13,
                         height: 1.4,
                       ),
                     ),
@@ -295,9 +338,10 @@ class PackagesPage extends StatelessWidget {
                         _infoChip(Icons.location_on, tour['location']),
                       ],
                     ),
-                    const SizedBox(height: 24),
+                    const SizedBox(height: 16),
                     SizedBox(
                       width: double.infinity,
+                      height: 52,
                       child: ElevatedButton(
                         onPressed: () => Navigator.push(
                           context,
@@ -315,8 +359,8 @@ class PackagesPage extends StatelessWidget {
                         child: const Text(
                           'RESERVE NOW',
                           style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            letterSpacing: 1.1,
+                            fontWeight: FontWeight.w900,
+                            letterSpacing: 1.2,
                           ),
                         ),
                       ),
@@ -332,25 +376,34 @@ class PackagesPage extends StatelessWidget {
   }
 
   Widget _infoChip(IconData icon, String text) {
-    return Row(
-      children: [
-        Icon(icon, size: 14, color: AppConstants.primaryColor),
-        const SizedBox(width: 6),
-        Text(
-          text,
-          style: const TextStyle(
-            fontSize: 12,
-            fontWeight: FontWeight.bold,
-            color: Colors.grey,
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        color: AppConstants.primaryColor.withOpacity(0.05),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 14, color: AppConstants.primaryColor),
+          const SizedBox(width: 6),
+          Text(
+            text,
+            style: const TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.bold,
+              color: Colors.grey,
+            ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 
   Widget _buildTaxiExperience(
     List<Map<String, dynamic>> cabs,
     BuildContext context,
+    bool isMobile,
   ) {
     return Container(
       width: double.infinity,
@@ -382,81 +435,102 @@ class PackagesPage extends StatelessWidget {
         crossAxisCount: crossAxisCount,
         crossAxisSpacing: 24,
         mainAxisSpacing: 24,
-        childAspectRatio: 0.72,
+        childAspectRatio: crossAxisCount == 1 ? 0.8 : 0.64,
       ),
       itemCount: cabs.length,
-      itemBuilder: (context, index) {
-        final cab = cabs[index];
-        return Container(
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(24),
-            border: Border.all(color: Colors.grey[100]!),
+      itemBuilder: (context, index) => _fadeIn(
+        child: _buildTaxiCard(cabs[index], context),
+        delay: 0.2 + (index * 0.1),
+      ),
+    );
+  }
+
+  Widget _buildTaxiCard(Map<String, dynamic> cab, BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: Colors.grey[100]!),
+        boxShadow: [
+          BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 20),
+        ],
+      ),
+      child: Column(
+        children: [
+          Expanded(
+            child: Center(
+              child: Padding(
+                padding: const EdgeInsets.all(20),
+                child: Image.asset(cab['image'], fit: BoxFit.contain),
+              ),
+            ),
           ),
-          child: Column(
-            children: [
-              const Expanded(
-                child: Icon(
-                  Icons.directions_car_filled,
-                  size: 80,
-                  color: AppConstants.primaryColor,
-                ),
-              ),
-              Text(
-                cab['model'],
-                style: const TextStyle(
-                  fontSize: 22,
-                  fontWeight: FontWeight.w900,
-                ),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                cab['type'],
-                style: const TextStyle(
-                  color: Colors.grey,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 12,
-                ),
-              ),
-              const SizedBox(height: 24),
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(24),
-                decoration: const BoxDecoration(
-                  color: AppConstants.secondaryColor,
-                  borderRadius: BorderRadius.vertical(
-                    bottom: Radius.circular(24),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 24),
+            child: Column(
+              children: [
+                Text(
+                  cab['model'],
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.w900,
                   ),
                 ),
-                child: Column(
-                  children: [
-                    _taxiDetail('Rate', '₹${cab['rate']}'),
-                    _taxiDetail('Capacity', cab['seats']),
-                    const SizedBox(height: 20),
-                    SizedBox(
-                      width: double.infinity,
-                      child: ElevatedButton(
-                        onPressed: () => Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => BookingPage(
-                              selectedPackage: '${cab['model']} Rental',
-                            ),
-                          ),
+                const SizedBox(height: 6),
+                Text(
+                  cab['type'],
+                  style: const TextStyle(
+                    color: AppConstants.primaryColor,
+                    fontWeight: FontWeight.w800,
+                    fontSize: 13,
+                    letterSpacing: 1,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 16),
+          Container(
+            padding: const EdgeInsets.all(24),
+            decoration: const BoxDecoration(
+              color: AppConstants.secondaryColor,
+              borderRadius: BorderRadius.vertical(bottom: Radius.circular(24)),
+            ),
+            child: Column(
+              children: [
+                _taxiDetail('Rate', '₹${cab['rate']}'),
+                _taxiDetail('Capacity', '${cab['seats']} Seats'),
+                const SizedBox(height: 20),
+                SizedBox(
+                  width: double.infinity,
+                  height: 48,
+                  child: ElevatedButton(
+                    onPressed: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => BookingPage(
+                          selectedPackage: '${cab['model']} Rental',
                         ),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: AppConstants.primaryColor,
-                        ),
-                        child: const Text('BOOK NOW'),
                       ),
                     ),
-                  ],
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppConstants.primaryColor,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    child: const Text(
+                      'BOOK NOW',
+                      style: TextStyle(fontWeight: FontWeight.w900),
+                    ),
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
-        );
-      },
+        ],
+      ),
     );
   }
 
@@ -468,12 +542,16 @@ class PackagesPage extends StatelessWidget {
         children: [
           Text(
             label,
-            style: const TextStyle(color: Colors.white60, fontSize: 13),
+            style: const TextStyle(
+              color: Colors.white60,
+              fontSize: 13,
+              fontWeight: FontWeight.bold,
+            ),
           ),
           Text(
             value,
             style: const TextStyle(
-              color: AppConstants.accentColor,
+              color: Colors.white,
               fontWeight: FontWeight.w900,
               fontSize: 15,
             ),

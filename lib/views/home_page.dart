@@ -9,6 +9,7 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:lowgo_cab/widgets/custom_footer.dart';
 import 'package:lowgo_cab/views/about_page.dart';
 import 'booking_page.dart';
+import 'package:lowgo_cab/views/feedback_page.dart';
 
 class HomePage extends StatelessWidget {
   const HomePage({super.key});
@@ -54,17 +55,64 @@ class HomePage extends StatelessWidget {
   }
 
   Widget _buildFloatingWhatsApp() {
-    return FloatingActionButton.extended(
-      onPressed: () => launchUrl(
-        Uri.parse(
-          'https://wa.me/${AppConstants.whatsappNumber.replaceAll('+', '')}',
+    return Container(
+      margin: const EdgeInsets.only(bottom: 16, right: 16),
+      child: MouseRegion(
+        cursor: SystemMouseCursors.click,
+        child: GestureDetector(
+          onTap: () => launchUrl(
+            Uri.parse(
+              'https://wa.me/${AppConstants.whatsappNumber.replaceAll('+', '').replaceAll(' ', '')}',
+            ),
+          ),
+          child: Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              gradient: AppConstants.primaryGradient,
+              shape: BoxShape.circle,
+              boxShadow: [
+                BoxShadow(
+                  color: AppConstants.primaryColor.withOpacity(0.4),
+                  blurRadius: 20,
+                  offset: const Offset(0, 8),
+                ),
+              ],
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(25),
+                  child: Image.asset(
+                    'assets/logo.png',
+                    height: 50,
+                    width: 50,
+                    errorBuilder: (context, error, stackTrace) => const Icon(
+                      Icons.local_taxi,
+                      color: Colors.white,
+                      size: 30,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                const Text(
+                  'Book on WhatsApp ',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w800,
+                    fontSize: 14,
+                  ),
+                ),
+                const Icon(
+                  FontAwesomeIcons.whatsapp,
+                  color: Colors.white,
+                  size: 20,
+                ),
+                const SizedBox(width: 8),
+              ],
+            ),
+          ),
         ),
-      ),
-      backgroundColor: const Color(0xFF25D366),
-      icon: const FaIcon(FontAwesomeIcons.whatsapp, color: Colors.white),
-      label: const Text(
-        'Chat with Us',
-        style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
       ),
     );
   }
@@ -73,11 +121,11 @@ class HomePage extends StatelessWidget {
     final isMobile = ResponsiveLayout.isMobile(context);
     return Container(
       width: double.infinity,
-      height: isMobile ? 600 : 800,
+      height: isMobile ? 650 : 850,
       decoration: const BoxDecoration(
         image: DecorationImage(
           image: NetworkImage(
-            'https://images.unsplash.com/photo-1485291571150-772bcfc10da5?w=1600', // Premium sedan image
+            'https://images.unsplash.com/photo-1485291571150-772bcfc10da5?w=1600',
           ),
           fit: BoxFit.cover,
         ),
@@ -86,9 +134,9 @@ class HomePage extends StatelessWidget {
         decoration: BoxDecoration(
           gradient: LinearGradient(
             colors: [
-              Colors.black.withOpacity(0.7),
-              Colors.transparent,
-              Colors.black.withOpacity(0.7),
+              Colors.black.withOpacity(0.85),
+              Colors.black.withOpacity(0.3),
+              Colors.black.withOpacity(0.9),
             ],
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
@@ -96,101 +144,119 @@ class HomePage extends StatelessWidget {
         ),
         child: Center(
           child: Container(
-            constraints: const BoxConstraints(maxWidth: 1000),
+            constraints: const BoxConstraints(maxWidth: 1100),
             padding: const EdgeInsets.symmetric(horizontal: 24),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 8,
+                _fadeIn(
+                  delay: 100,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 20,
+                      vertical: 10,
+                    ),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.15),
+                      borderRadius: BorderRadius.circular(40),
+                      border: Border.all(color: Colors.white24),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(
+                          Icons.star,
+                          color: AppConstants.accentColor,
+                          size: 16,
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          'JAIPUR\'S #1 TAXI SERVICE',
+                          style: TextStyle(
+                            color: Colors.white.withOpacity(0.9),
+                            fontWeight: FontWeight.w800,
+                            letterSpacing: 2,
+                            fontSize: 11,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
-                  decoration: BoxDecoration(
-                    color: AppConstants.primaryColor,
-                    borderRadius: BorderRadius.circular(30),
-                  ),
-                  child: const Text(
-                    'TAXI SERVICE IN JAIPUR',
+                ),
+                const SizedBox(height: 32),
+                _fadeIn(
+                  delay: 300,
+                  child: Text(
+                    'Experience Premium\nComfort & Safety',
+                    textAlign: TextAlign.center,
                     style: TextStyle(
+                      fontSize: isMobile ? 44 : 96,
+                      fontWeight: FontWeight.w900,
                       color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                      letterSpacing: 2,
-                      fontSize: 12,
+                      height: 0.95,
+                      letterSpacing: -2,
                     ),
                   ),
                 ),
-                const SizedBox(height: 24),
-                Text(
-                  'Expert Local & \nOutstation Travel',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontSize: isMobile ? 48 : 84,
-                    fontWeight: FontWeight.w900,
-                    color: Colors.white,
-                    height: 1.0,
-                    letterSpacing: -1,
+                const SizedBox(height: 28),
+                _fadeIn(
+                  delay: 500,
+                  child: Text(
+                    'Professional chauffeurs, transparent pricing, and 24/7 support.',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: isMobile ? 18 : 22,
+                      color: Colors.white.withOpacity(0.8),
+                      fontWeight: FontWeight.w400,
+                    ),
                   ),
                 ),
-                const SizedBox(height: 24),
-                const Text(
-                  'Premium Cars, Professional Drivers, Best Prices Guaranteed.',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(fontSize: 20, color: Colors.white70),
-                ),
-                const SizedBox(height: 48),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    ElevatedButton(
-                      onPressed: () => Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const PackagesPage(),
-                        ),
-                      ),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: AppConstants.primaryColor,
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 40,
-                          vertical: 24,
-                        ),
-                      ),
-                      child: const Text(
-                        'BOOK YOUR RIDE',
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 16,
-                        ),
-                      ),
-                    ),
-                    if (!isMobile) ...[
-                      const SizedBox(width: 20),
-                      OutlinedButton(
-                        onPressed: () => Navigator.pushReplacement(
+                const SizedBox(height: 54),
+                _fadeIn(
+                  delay: 700,
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      _AnimatedButton(
+                        onPressed: () => Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (context) => const PackagesPage(),
+                            builder: (context) => const BookingPage(),
                           ),
                         ),
-                        style: OutlinedButton.styleFrom(
-                          side: const BorderSide(color: Colors.white, width: 2),
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 40,
-                            vertical: 24,
-                          ),
-                          foregroundColor: Colors.white,
-                        ),
-                        child: const Text(
-                          'OUR PACKAGES',
-                          style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 16,
+                        child: const Padding(
+                          padding: EdgeInsets.symmetric(horizontal: 16),
+                          child: Text(
+                            'RESERVE NOW',
+                            style: TextStyle(
+                              fontWeight: FontWeight.w900,
+                              fontSize: 16,
+                              letterSpacing: 1.5,
+                            ),
                           ),
                         ),
                       ),
+                      if (!isMobile) ...[
+                        const SizedBox(width: 24),
+                        _AnimatedOutlinedButton(
+                          onPressed: () => Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const PackagesPage(),
+                            ),
+                          ),
+                          child: const Text(
+                            'VIEW PACKAGES',
+                            style: TextStyle(
+                              fontWeight: FontWeight.w900,
+                              fontSize: 16,
+                              letterSpacing: 1.5,
+                            ),
+                          ),
+                        ),
+                      ],
                     ],
-                  ],
+                  ),
                 ),
               ],
             ),
@@ -222,8 +288,8 @@ class HomePage extends StatelessWidget {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
-              _statItem('5000+', 'Happy Clients'),
-              _statItem('150+', 'Verified Drivers'),
+              _statItem('500+', 'Happy Clients'),
+              _statItem('50+', 'Verified Drivers'),
               _statItem('24/7', 'Support Available'),
               if (!ResponsiveLayout.isMobile(context))
                 _statItem('100%', 'Safe Guarantee'),
@@ -260,7 +326,7 @@ class HomePage extends StatelessWidget {
   Widget _buildAboutModern(BuildContext context) {
     final isMobile = ResponsiveLayout.isMobile(context);
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 80, horizontal: 24),
+      padding: const EdgeInsets.symmetric(vertical: 40, horizontal: 24),
       child: Center(
         child: Container(
           constraints: const BoxConstraints(maxWidth: 1200),
@@ -306,8 +372,8 @@ class HomePage extends StatelessWidget {
             _featureList('Certified Professional Drivers'),
             _featureList('Wide Range of Transparent Pricing'),
             _featureList('Zero Hidden Charges'),
-            const SizedBox(height: 48),
-            ElevatedButton(
+            const SizedBox(height: 32),
+            _AnimatedButton(
               onPressed: () => Navigator.pushReplacement(
                 context,
                 MaterialPageRoute(builder: (context) => const AboutPage()),
@@ -320,16 +386,58 @@ class HomePage extends StatelessWidget {
       if (!isMobile) const SizedBox(width: 80),
       Expanded(
         flex: isMobile ? 0 : 5,
-        child: Container(
-          height: 500,
-          margin: EdgeInsets.only(top: isMobile ? 40 : 0),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(30),
-            image: const DecorationImage(
-              image: NetworkImage(
-                'https://images.unsplash.com/photo-1598254823903-88746ac5fbc6?w=800', // Jaipur Hawa Mahal image
-              ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(30),
+          child: Container(
+            height: 500,
+            margin: EdgeInsets.only(top: isMobile ? 40 : 0),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(30),
+              color: AppConstants.surfaceColor,
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.2),
+                  blurRadius: 30,
+                  offset: const Offset(0, 15),
+                ),
+              ],
+            ),
+            child: Image.network(
+              'https://images.unsplash.com/photo-1524492412937-b28074a5d7da?w=800&q=80',
               fit: BoxFit.cover,
+              loadingBuilder: (context, child, loadingProgress) {
+                if (loadingProgress == null) return child;
+                return Center(
+                  child: CircularProgressIndicator(
+                    value: loadingProgress.expectedTotalBytes != null
+                        ? loadingProgress.cumulativeBytesLoaded /
+                              loadingProgress.expectedTotalBytes!
+                        : null,
+                  ),
+                );
+              },
+              errorBuilder: (context, error, stackTrace) {
+                return Container(
+                  color: AppConstants.surfaceColor,
+                  child: const Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(Icons.image, size: 80, color: Colors.grey),
+                        SizedBox(height: 16),
+                        Text(
+                          'Jaipur - The Pink City',
+                          style: TextStyle(
+                            fontSize: 24,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.grey,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              },
             ),
           ),
         ),
@@ -361,7 +469,7 @@ class HomePage extends StatelessWidget {
     return Container(
       width: double.infinity,
       color: AppConstants.surfaceColor,
-      padding: const EdgeInsets.symmetric(vertical: 100, horizontal: 24),
+      padding: const EdgeInsets.symmetric(vertical: 60, horizontal: 24),
       child: Center(
         child: Container(
           constraints: const BoxConstraints(maxWidth: 1200),
@@ -380,7 +488,7 @@ class HomePage extends StatelessWidget {
                 'Premium Travel Solutions',
                 style: TextStyle(fontSize: 36, fontWeight: FontWeight.w900),
               ),
-              const SizedBox(height: 60),
+              const SizedBox(height: 48),
               ResponsiveLayout(
                 mobile: _serviceGrid(1),
                 tablet: _serviceGrid(2),
@@ -422,25 +530,34 @@ class HomePage extends StatelessWidget {
   }
 
   Widget _serviceCard(IconData icon, String title, String desc) {
-    return Container(
-      padding: const EdgeInsets.all(32),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(icon, size: 48, color: AppConstants.primaryColor),
-          const SizedBox(height: 24),
-          Text(
-            title,
-            style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w900),
-          ),
-          const SizedBox(height: 12),
-          Text(desc, style: const TextStyle(color: Colors.grey)),
-        ],
+    return _HoverCard(
+      child: Container(
+        padding: const EdgeInsets.all(32),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(20),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.05),
+              blurRadius: 20,
+              offset: const Offset(0, 10),
+            ),
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(icon, size: 48, color: AppConstants.primaryColor),
+            const SizedBox(height: 24),
+            Text(
+              title,
+              style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w900),
+            ),
+            const SizedBox(height: 12),
+            Text(desc, style: const TextStyle(color: Colors.grey)),
+          ],
+        ),
       ),
     );
   }
@@ -531,7 +648,109 @@ class HomePage extends StatelessWidget {
               MaterialPageRoute(builder: (context) => const ContactPage()),
             ),
           ),
+          ListTile(
+            title: const Text('GIVE FEEDBACK'),
+            onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => const FeedbackPage()),
+            ),
+          ),
         ],
+      ),
+    );
+  }
+}
+
+// Animated Button Widget with Scale Effect
+class _AnimatedButton extends StatefulWidget {
+  final VoidCallback onPressed;
+  final Widget child;
+
+  const _AnimatedButton({required this.onPressed, required this.child});
+
+  @override
+  State<_AnimatedButton> createState() => _AnimatedButtonState();
+}
+
+class _AnimatedButtonState extends State<_AnimatedButton> {
+  bool _isHovered = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return MouseRegion(
+      onEnter: (_) => setState(() => _isHovered = true),
+      onExit: (_) => setState(() => _isHovered = false),
+      child: AnimatedScale(
+        scale: _isHovered ? 1.05 : 1.0,
+        duration: const Duration(milliseconds: 200),
+        curve: Curves.easeInOut,
+        child: ElevatedButton(onPressed: widget.onPressed, child: widget.child),
+      ),
+    );
+  }
+}
+
+// Hover Card Widget with Lift Effect
+class _HoverCard extends StatefulWidget {
+  final Widget child;
+
+  const _HoverCard({required this.child});
+
+  @override
+  State<_HoverCard> createState() => _HoverCardState();
+}
+
+class _HoverCardState extends State<_HoverCard> {
+  bool _isHovered = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return MouseRegion(
+      onEnter: (_) => setState(() => _isHovered = true),
+      onExit: (_) => setState(() => _isHovered = false),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeInOut,
+        transform: Matrix4.translationValues(0, _isHovered ? -10 : 0, 0),
+        child: widget.child,
+      ),
+    );
+  }
+}
+
+// Animated Outlined Button Widget with Scale Effect
+class _AnimatedOutlinedButton extends StatefulWidget {
+  final VoidCallback onPressed;
+  final Widget child;
+
+  const _AnimatedOutlinedButton({required this.onPressed, required this.child});
+
+  @override
+  State<_AnimatedOutlinedButton> createState() =>
+      _AnimatedOutlinedButtonState();
+}
+
+class _AnimatedOutlinedButtonState extends State<_AnimatedOutlinedButton> {
+  bool _isHovered = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return MouseRegion(
+      onEnter: (_) => setState(() => _isHovered = true),
+      onExit: (_) => setState(() => _isHovered = false),
+      child: AnimatedScale(
+        scale: _isHovered ? 1.05 : 1.0,
+        duration: const Duration(milliseconds: 200),
+        curve: Curves.easeInOut,
+        child: OutlinedButton(
+          onPressed: widget.onPressed,
+          style: OutlinedButton.styleFrom(
+            side: const BorderSide(color: Colors.white, width: 2),
+            padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 24),
+            foregroundColor: Colors.white,
+          ),
+          child: widget.child,
+        ),
       ),
     );
   }

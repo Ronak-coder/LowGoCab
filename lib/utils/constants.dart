@@ -1,19 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'secrets.dart';
 
 class AppConstants {
   static const String appName = 'LowGo Cab';
-  static const String whatsappNumber =
-      '+919461386845'; // Updated with a placeholder but valid-ish number
-  static const String contactEmail = 'support@lowgocab.online';
+  static const String whatsappNumber = '+91 9461386845';
+  static const String instagramUrl =
+      'https://www.instagram.com/lowgocab?igsh=MXhueHdwNXBkNXlzMg==';
+  static const String contactEmail =
+      'pragyank@lowgocab.online'; // Admin receives all notifications
+  static const String displayEmail = 'support@lowgocab.online'; // UI Display
 
-  // EmailJS Configuration (For Free Auto-Emails)
-  static const String emailJsServiceId =
-      'service_xxey8ct'; // Get from emailjs.com
-  static const String emailJsTemplateId =
-      'template_v4saizz'; // Get from emailjs.com
-  static const String emailJsPublicKey =
-      's9vo_rN7nVTZf27iz'; // Get from emailjs.com
+  // Email via Google Apps Script (free relay using your Gmail)
+  // See lib/utils/secrets.dart for setup instructions
+  static const String googleScriptUrl = AppSecrets.googleScriptUrl;
 
   // Sightseeing Cab in Jaipur Inspired Palette - Enhanced for Modern Feel
   static const Color primaryColor = Color(0xFFEE0B5E); // Vibrant Pink/Magenta

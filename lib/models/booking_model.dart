@@ -15,6 +15,7 @@ class Package {
 class Booking {
   final String name;
   final String mobile;
+  final String email; // Added email
   final String fromLocation;
   final String toLocation;
   final int numberOfPersons;
@@ -23,6 +24,7 @@ class Booking {
   Booking({
     required this.name,
     required this.mobile,
+    this.email = '', // Default empty for compatibility
     required this.fromLocation,
     required this.toLocation,
     required this.numberOfPersons,

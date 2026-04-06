@@ -4,9 +4,11 @@ import 'package:lowgo_cab/views/home_page.dart';
 import 'package:lowgo_cab/views/packages_page.dart';
 import 'package:lowgo_cab/views/about_page.dart';
 import 'package:lowgo_cab/views/contact_page.dart';
+import 'package:lowgo_cab/views/feedback_page.dart';
 import 'package:lowgo_cab/views/booking_page.dart';
 import 'package:lowgo_cab/widgets/responsive_layout.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class CustomHeader extends StatelessWidget implements PreferredSizeWidget {
   const CustomHeader({super.key});
@@ -36,7 +38,7 @@ class CustomHeader extends StatelessWidget implements PreferredSizeWidget {
                       const Icon(Icons.email, color: Colors.white, size: 16),
                       const SizedBox(width: 8),
                       const Text(
-                        AppConstants.contactEmail,
+                        AppConstants.displayEmail,
                         style: TextStyle(color: Colors.white, fontSize: 12),
                       ),
                       if (!isMobile) ...[
@@ -52,10 +54,18 @@ class CustomHeader extends StatelessWidget implements PreferredSizeWidget {
                   ),
                   Row(
                     children: [
-                      _socialIcon(FontAwesomeIcons.facebookF),
-                      _socialIcon(FontAwesomeIcons.twitter),
-                      _socialIcon(FontAwesomeIcons.instagram),
-                      _socialIcon(FontAwesomeIcons.linkedinIn),
+                      _socialIcon(
+                        FontAwesomeIcons.instagram,
+                        () => launchUrl(Uri.parse(AppConstants.instagramUrl)),
+                      ),
+                      _socialIcon(
+                        FontAwesomeIcons.whatsapp,
+                        () => launchUrl(
+                          Uri.parse(
+                            'https://wa.me/${AppConstants.whatsappNumber.replaceAll('+', '').replaceAll(' ', '')}',
+                          ),
+                        ),
+                      ),
                     ],
                   ),
                 ],
@@ -76,10 +86,15 @@ class CustomHeader extends StatelessWidget implements PreferredSizeWidget {
                 children: [
                   // Logo
                   GestureDetector(
-                    onTap: () => Navigator.of(context).pushAndRemoveUntil(
-                      MaterialPageRoute(builder: (context) => const HomePage()),
-                      (route) => false,
-                    ),
+                    onTap: () {
+                      // Navigate to home and remove all previous routes
+                      Navigator.of(context).pushAndRemoveUntil(
+                        MaterialPageRoute(
+                          builder: (context) => const HomePage(),
+                        ),
+                        (route) => false,
+                      );
+                    },
                     child: Image.asset(
                       'assets/logo.png',
                       height: isMobile ? 45 : 55,
@@ -121,6 +136,11 @@ class CustomHeader extends StatelessWidget implements PreferredSizeWidget {
                           'CONTACT US',
                           const ContactPage(),
                         ),
+                        _buildNavLink(
+                          context,
+                          'FEEDBACK',
+                          const FeedbackPage(),
+                        ),
                         const SizedBox(width: 12),
                         ElevatedButton(
                           onPressed: () => Navigator.pushReplacement(
@@ -144,12 +164,15 @@ class CustomHeader extends StatelessWidget implements PreferredSizeWidget {
                       ],
                     )
                   else
-                    IconButton(
-                      icon: const Icon(
-                        Icons.menu,
-                        color: AppConstants.secondaryColor,
+                    Builder(
+                      builder: (context) => IconButton(
+                        icon: const Icon(
+                          Icons.menu,
+                          color: AppConstants.secondaryColor,
+                          size: 28,
+                        ),
+                        onPressed: () => Scaffold.of(context).openEndDrawer(),
                       ),
-                      onPressed: () => Scaffold.of(context).openEndDrawer(),
                     ),
                 ],
               ),
@@ -160,10 +183,13 @@ class CustomHeader extends StatelessWidget implements PreferredSizeWidget {
     );
   }
 
-  Widget _socialIcon(IconData icon) {
+  Widget _socialIcon(IconData icon, VoidCallback onTap) {
     return Padding(
       padding: const EdgeInsets.only(left: 16),
-      child: FaIcon(icon, color: Colors.white, size: 14),
+      child: InkWell(
+        onTap: onTap,
+        child: FaIcon(icon, color: Colors.white, size: 16),
+      ),
     );
   }
 

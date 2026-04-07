@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:intl/intl.dart';
 import 'package:lowgo_cab/utils/constants.dart';
 import 'package:lowgo_cab/models/booking_model.dart';
 import 'package:lowgo_cab/services/contact_service.dart';
@@ -24,10 +26,24 @@ class _BookingPageState extends State<BookingPage>
   final _emailController = TextEditingController();
   final _fromController = TextEditingController();
   final _toController = TextEditingController();
+
+  // Date & Time state
+  DateTime? _selectedDate;
+  TimeOfDay? _selectedTime;
+
   int _persons = 1;
   bool _isSubmitting = false;
 
   late AnimationController _contentController;
+
+  // Formatted display strings
+  String get _formattedDate =>
+      _selectedDate != null
+          ? DateFormat('dd MMM yyyy').format(_selectedDate!)
+          : '';
+
+  String get _formattedTime =>
+      _selectedTime != null ? _selectedTime!.format(context) : '';
 
   @override
   void initState() {
@@ -50,6 +66,47 @@ class _BookingPageState extends State<BookingPage>
     super.dispose();
   }
 
+  Future<void> _pickDate() async {
+    final now = DateTime.now();
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: _selectedDate ?? now,
+      firstDate: now,
+      lastDate: DateTime(now.year + 2),
+      builder: (context, child) => Theme(
+        data: Theme.of(context).copyWith(
+          colorScheme: const ColorScheme.light(
+            primary: AppConstants.primaryColor,
+            onPrimary: Colors.white,
+            surface: Colors.white,
+            onSurface: Colors.black87,
+          ),
+        ),
+        child: child!,
+      ),
+    );
+    if (picked != null) setState(() => _selectedDate = picked);
+  }
+
+  Future<void> _pickTime() async {
+    final picked = await showTimePicker(
+      context: context,
+      initialTime: _selectedTime ?? TimeOfDay.now(),
+      builder: (context, child) => Theme(
+        data: Theme.of(context).copyWith(
+          colorScheme: const ColorScheme.light(
+            primary: AppConstants.primaryColor,
+            onPrimary: Colors.white,
+            surface: Colors.white,
+            onSurface: Colors.black87,
+          ),
+        ),
+        child: child!,
+      ),
+    );
+    if (picked != null) setState(() => _selectedTime = picked);
+  }
+
   Future<void> _handleSubmission(bool isEmail) async {
     if (_formKey.currentState!.validate()) {
       setState(() => _isSubmitting = true);
@@ -62,6 +119,8 @@ class _BookingPageState extends State<BookingPage>
         toLocation: _toController.text,
         numberOfPersons: _persons,
         packageSelected: widget.selectedPackage ?? 'General Inquiry',
+        travelDate: _formattedDate,
+        pickupTime: _formattedTime,
       );
 
       try {
@@ -71,7 +130,7 @@ class _BookingPageState extends State<BookingPage>
           if (isEmail) {
             await ContactService.sendAutoEmail(booking);
           } else {
-            ContactService.sendAutoEmail(booking); 
+            ContactService.sendAutoEmail(booking);
             await ContactService.sendWhatsApp(booking);
           }
         } catch (e) {
@@ -296,6 +355,8 @@ class _BookingPageState extends State<BookingPage>
               style: TextStyle(fontSize: 28, fontWeight: FontWeight.w900),
             ),
             const SizedBox(height: 32),
+
+            // Passenger Name
             _premiumField(
               'Passenger Name',
               Icons.person_outline,
@@ -303,103 +364,315 @@ class _BookingPageState extends State<BookingPage>
               'Enter your full name',
             ),
             const SizedBox(height: 24),
-            Row(
-              children: [
-                Expanded(
-                  child: _premiumField(
-                    'Mobile Number',
-                    Icons.phone_android_outlined,
-                    _mobileController,
-                    '98765 43210',
-                    keyboardType: TextInputType.phone,
-                  ),
-                ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: _premiumField(
-                    'Email (Optional)',
-                    Icons.email_outlined,
-                    _emailController,
-                    'you@example.com',
-                    keyboardType: TextInputType.emailAddress,
-                    required: false,
-                  ),
-                ),
-              ],
+
+            // Mobile + Email
+            _responsiveRow(
+              isMobile,
+              _premiumField(
+                'Mobile Number',
+                Icons.phone_android_outlined,
+                _mobileController,
+                '98765 43210',
+                keyboardType: TextInputType.phone,
+              ),
+              _premiumField(
+                'Email (Optional)',
+                Icons.email_outlined,
+                _emailController,
+                'you@example.com',
+                keyboardType: TextInputType.emailAddress,
+                required: false,
+              ),
             ),
             const SizedBox(height: 24),
-            Row(
-              children: [
-                Expanded(
-                  child: _premiumField(
-                    'Pickup Location',
-                    Icons.location_on_outlined,
-                    _fromController,
-                    'Pratap Nagar, Jaipur',
-                  ),
-                ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: _premiumField(
-                    'Drop Location',
-                    Icons.flag_outlined,
-                    _toController,
-                    'Airport / Railway Station',
-                  ),
-                ),
-              ],
+
+            // Pickup + Drop Location
+            _responsiveRow(
+              isMobile,
+              _premiumField(
+                'Pickup Location',
+                Icons.location_on_outlined,
+                _fromController,
+                'Pratap Nagar, Jaipur',
+              ),
+              _premiumField(
+                'Drop Location',
+                Icons.flag_outlined,
+                _toController,
+                'Airport / Railway Station',
+              ),
             ),
             const SizedBox(height: 24),
+
+            // Travel Date + Pickup Time
+            _responsiveRow(
+              isMobile,
+              _datePickerField(),
+              _timePickerField(),
+            ),
+            const SizedBox(height: 24),
+
+            // Persons picker
             _buildPersonPicker(),
             const SizedBox(height: 48),
-            Row(
-              children: [
-                Expanded(
-                  child: ElevatedButton(
-                    onPressed: _isSubmitting
-                        ? null
-                        : () => _handleSubmission(true),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppConstants.secondaryColor,
-                      padding: const EdgeInsets.symmetric(vertical: 20),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16),
-                      ),
-                    ),
-                    child: const Text(
-                      'SUBMIT VIA EMAIL',
-                      style: TextStyle(
-                        fontWeight: FontWeight.w900,
-                        letterSpacing: 1,
-                      ),
-                    ),
+
+            // Submit buttons — always side-by-side, adaptive sizing
+            _buildSubmitButtons(),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// Returns a Row on desktop, Column on mobile for two sibling fields.
+  Widget _responsiveRow(bool isMobile, Widget left, Widget right) {
+    if (isMobile) {
+      return Column(
+        children: [left, const SizedBox(height: 24), right],
+      );
+    }
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Expanded(child: left),
+        const SizedBox(width: 16),
+        Expanded(child: right),
+      ],
+    );
+  }
+
+  // ── Date picker tap-field ────────────────────────────────────────────────
+  Widget _datePickerField() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          'TRAVEL DATE',
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            fontSize: 10,
+            color: Colors.grey,
+            letterSpacing: 1,
+          ),
+        ),
+        const SizedBox(height: 8),
+        GestureDetector(
+          onTap: _pickDate,
+          child: AbsorbPointer(
+            child: TextFormField(
+              readOnly: true,
+              validator: (_) =>
+                  _selectedDate == null ? 'Please select travel date' : null,
+              style: const TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 15,
+              ),
+              decoration: InputDecoration(
+                prefixIcon: const Icon(
+                  Icons.calendar_today_outlined,
+                  color: AppConstants.primaryColor,
+                  size: 20,
+                ),
+                hintText:
+                    _selectedDate != null ? _formattedDate : 'Select date',
+                hintStyle: TextStyle(
+                  color: _selectedDate != null
+                      ? Colors.black87
+                      : Colors.grey.withOpacity(0.5),
+                  fontWeight: _selectedDate != null
+                      ? FontWeight.bold
+                      : FontWeight.normal,
+                ),
+                fillColor: Colors.grey.withOpacity(0.04),
+                filled: true,
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(16),
+                  borderSide: BorderSide.none,
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(16),
+                  borderSide: const BorderSide(
+                    color: AppConstants.primaryColor,
+                    width: 2,
                   ),
                 ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: ElevatedButton(
-                    onPressed: _isSubmitting
-                        ? null
-                        : () => _handleSubmission(false),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF25D366),
-                      padding: const EdgeInsets.symmetric(vertical: 20),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16),
-                      ),
-                    ),
-                    child: const Text(
-                      'BOOK ON WHATSAPP',
-                      style: TextStyle(
-                        fontWeight: FontWeight.w900,
-                        letterSpacing: 1,
-                      ),
-                    ),
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  // ── Time picker tap-field ────────────────────────────────────────────────
+  Widget _timePickerField() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          'PICKUP TIME',
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            fontSize: 10,
+            color: Colors.grey,
+            letterSpacing: 1,
+          ),
+        ),
+        const SizedBox(height: 8),
+        GestureDetector(
+          onTap: _pickTime,
+          child: AbsorbPointer(
+            child: TextFormField(
+              readOnly: true,
+              validator: (_) =>
+                  _selectedTime == null ? 'Please select pickup time' : null,
+              style: const TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 15,
+              ),
+              decoration: InputDecoration(
+                prefixIcon: const Icon(
+                  Icons.access_time_outlined,
+                  color: AppConstants.primaryColor,
+                  size: 20,
+                ),
+                hintText:
+                    _selectedTime != null ? _formattedTime : 'Select time',
+                hintStyle: TextStyle(
+                  color: _selectedTime != null
+                      ? Colors.black87
+                      : Colors.grey.withOpacity(0.5),
+                  fontWeight: _selectedTime != null
+                      ? FontWeight.bold
+                      : FontWeight.normal,
+                ),
+                fillColor: Colors.grey.withOpacity(0.04),
+                filled: true,
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(16),
+                  borderSide: BorderSide.none,
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(16),
+                  borderSide: const BorderSide(
+                    color: AppConstants.primaryColor,
+                    width: 2,
                   ),
                 ),
-              ],
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildSubmitButtons() {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        // Compact mode when card is narrow (mobile)
+        final compact = constraints.maxWidth < 420;
+        final fontSize = compact ? 11.0 : 13.0;
+        final iconSize = compact ? 15.0 : 18.0;
+        final vPad = compact ? 16.0 : 20.0;
+
+        return Row(
+          children: [
+            // ── Email Button ──────────────────────────────────────────
+            Expanded(
+              child: _buildGradientButton(
+                onTap: _isSubmitting ? null : () => _handleSubmission(true),
+                gradient: const LinearGradient(
+                  colors: [Color(0xFF1A1A2E), Color(0xFF16213E)],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                shadowColor: Colors.black26,
+                icon: Icons.email_rounded,
+                label: 'SUBMIT VIA EMAIL',
+                fontSize: fontSize,
+                iconSize: iconSize,
+                vPad: vPad,
+                compact: compact,
+              ),
+            ),
+            const SizedBox(width: 12),
+            // ── WhatsApp Button ───────────────────────────────────────
+            Expanded(
+              child: _buildGradientButton(
+                onTap: _isSubmitting ? null : () => _handleSubmission(false),
+                gradient: const LinearGradient(
+                  colors: [Color(0xFF25D366), Color(0xFF128C7E)],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                shadowColor: Color(0x5525D366),
+                icon: FontAwesomeIcons.whatsapp,
+                label: 'BOOK ON WHATSAPP',
+                fontSize: fontSize,
+                iconSize: iconSize,
+                vPad: vPad,
+                compact: compact,
+              ),
             ),
           ],
+        );
+      },
+    );
+  }
+
+  Widget _buildGradientButton({
+    required VoidCallback? onTap,
+    required LinearGradient gradient,
+    required Color shadowColor,
+    required IconData icon,
+    required String label,
+    required double fontSize,
+    required double iconSize,
+    required double vPad,
+    required bool compact,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: AnimatedOpacity(
+        opacity: onTap == null ? 0.5 : 1.0,
+        duration: const Duration(milliseconds: 200),
+        child: Container(
+          padding: EdgeInsets.symmetric(vertical: vPad, horizontal: 8),
+          decoration: BoxDecoration(
+            gradient: gradient,
+            borderRadius: BorderRadius.circular(16),
+            boxShadow: [
+              BoxShadow(
+                color: shadowColor,
+                blurRadius: 16,
+                offset: const Offset(0, 6),
+              ),
+            ],
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(icon, color: Colors.white, size: iconSize),
+              SizedBox(width: compact ? 6 : 8),
+              Flexible(
+                child: Text(
+                  label,
+                  textAlign: TextAlign.center,
+                  maxLines: compact ? 2 : 1,
+                  overflow: TextOverflow.visible,
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w900,
+                    fontSize: fontSize,
+                    letterSpacing: compact ? 0.5 : 0.8,
+                    height: 1.2,
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

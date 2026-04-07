@@ -1,6 +1,6 @@
 import 'dart:convert';
-// ignore: avoid_web_libraries_in_flutter
-import 'dart:js' as js;
+import 'dart:js_interop';
+import 'package:web/web.dart' as web;
 import 'package:url_launcher/url_launcher.dart';
 import 'package:lowgo_cab/utils/constants.dart';
 import 'package:lowgo_cab/models/booking_model.dart';
@@ -44,20 +44,10 @@ class ContactService {
 
   /// Fires an XMLHttpRequest POST with JSON payload via JS interop.
   static void _xhrPost(String url, Map<String, dynamic> payload) {
-    // Encode payload to JSON and store in a global JS variable to avoid
-    // any string injection issues inside the eval.
-    js.context['_lgPayload'] = json.encode(payload);
-    js.context['_lgUrl'] = url;
-    js.context.callMethod('eval', [
-      '''
-      (function() {
-        var xhr = new XMLHttpRequest();
-        xhr.open("POST", window._lgUrl, true);
-        xhr.send(window._lgPayload);
-        console.log("[LowGo Cab] XHR sent to:", window._lgUrl);
-      })();
-      '''
-    ]);
+    final String payloadJson = json.encode(payload);
+    final xhr = web.XMLHttpRequest();
+    xhr.open('POST', url, true);
+    xhr.send(payloadJson.toJS);
   }
 
   // ─────────────────────────────────────────────────────────────────────────
@@ -119,8 +109,9 @@ class ContactService {
     final Uri uri = Uri.parse(
       'https://wa.me/$phone?text=${Uri.encodeComponent(booking.toWhatsAppMessage())}',
     );
-    if (await canLaunchUrl(uri))
+    if (await canLaunchUrl(uri)) {
       await launchUrl(uri, mode: LaunchMode.externalApplication);
+    }
   }
 
   // ─────────────────────────────────────────────────────────────────────────
@@ -209,6 +200,8 @@ class ContactService {
         ${_infoRow('From', booking.fromLocation)}
         ${_altRow('To', booking.toLocation)}
         ${_infoRow('Persons', '${booking.numberOfPersons} person${booking.numberOfPersons > 1 ? "s" : ""}')}
+        ${booking.travelDate.isNotEmpty ? _altRow('<span style="color:#EE0B5E;">&#128197; Travel Date</span>', '<strong>${booking.travelDate}</strong>') : ''}
+        ${booking.pickupTime.isNotEmpty ? _infoRow('<span style="color:#EE0B5E;">&#128336; Pickup Time</span>', '<strong>${booking.pickupTime}</strong>') : ''}
       </table>
       <div style="margin-top:28px;background:#FFF0F5;border-left:4px solid #EE0B5E;border-radius:0 8px 8px 0;padding:16px 20px;">
         <p style="margin:0;color:#EE0B5E;font-weight:bold;font-size:13px;">ACTION REQUIRED</p>
@@ -237,6 +230,8 @@ class ContactService {
           ${_altRow('From', booking.fromLocation)}
           ${_infoRow('To', booking.toLocation)}
           ${_altRow('Persons', '${booking.numberOfPersons} person${booking.numberOfPersons > 1 ? "s" : ""}')}
+          ${booking.travelDate.isNotEmpty ? _infoRow('&#128197; Travel Date', '<strong style="color:#EE0B5E;">${booking.travelDate}</strong>') : ''}
+          ${booking.pickupTime.isNotEmpty ? _altRow('&#128336; Pickup Time', '<strong style="color:#EE0B5E;">${booking.pickupTime}</strong>') : ''}
         </table>
       </div>
       <div style="background:linear-gradient(135deg,#EE0B5E,#FF4D8D);border-radius:12px;padding:24px;text-align:center;margin-bottom:28px;">

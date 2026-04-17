@@ -15,30 +15,44 @@ class AppConstants {
   // See lib/utils/secrets.dart for setup instructions
   static const String googleScriptUrl = AppSecrets.googleScriptUrl;
 
-  // Sightseeing Cab in Jaipur Inspired Palette - Enhanced for Modern Feel
-  static const Color primaryColor = Color(0xFFEE0B5E); // Vibrant Pink/Magenta
-  static const Color primaryLight = Color(0xFFFF4D8D);
-  static const Color primaryDark = Color(0xFFB50847);
+  // TravelExplore Blue-Green Gradient Theme
+  static const Color primaryColor = Color(0xFF0D8BFF); // Bright Blue
+  static const Color primaryLight = Color(0xFF00C6FF);
+  static const Color primaryDark = Color(0xFF0072FF);
 
-  static const Color secondaryColor = Color(0xFF1A1A1A); // Dark Grey/Black
-  static const Color accentColor = Color(0xFFFFD700); // Gold
+  static const Color secondaryColor = Color(0xFF00C853); // Green
+  static const Color accentColor = Color(0xFFFFB800); // Gold/Yellow
 
-  static const Color backgroundColor = Color(0xFFFFFFFF);
-  static const Color surfaceColor = Color(0xFFFBFBFB);
+  static const Color backgroundColor = Color(0xFFF8FAFC);
+  static const Color surfaceColor = Color(0xFFFFFFFF);
   static const Color cardShadow = Color(0x0A000000);
 
-  static const Color successColor = Color(0xFF27AE60);
-  static const Color topBarColor = Color(0xFFEE0B5E);
+  static const Color successColor = Color(0xFF00C853);
+  static const Color topBarColor = Color(0xFF0D8BFF);
 
-  // Gradients for modern feel
+  // Main Blue-Green Gradient
   static const LinearGradient primaryGradient = LinearGradient(
-    colors: [primaryColor, primaryLight],
+    colors: [Color(0xFF0D8BFF), Color(0xFF00B4FF), Color(0xFF00C853)],
+    begin: Alignment.centerLeft,
+    end: Alignment.centerRight,
+  );
+
+  // Blue Gradient for headers
+  static const LinearGradient blueGradient = LinearGradient(
+    colors: [Color(0xFF0D8BFF), Color(0xFF00C6FF)],
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+  );
+
+  // Green Gradient
+  static const LinearGradient greenGradient = LinearGradient(
+    colors: [Color(0xFF00C853), Color(0xFF69F0AE)],
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
   );
 
   static const LinearGradient darkGradient = LinearGradient(
-    colors: [secondaryColor, Color(0xFF333333)],
+    colors: [Color(0xFF1A1F36), Color(0xFF2D325A)],
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
   );
@@ -54,10 +68,10 @@ final ThemeData appTheme = ThemeData(
     onSecondary: Colors.white,
     surface: AppConstants.backgroundColor,
   ),
-  textTheme: GoogleFonts.outfitTextTheme(),
+  textTheme: GoogleFonts.interTextTheme(),
   appBarTheme: const AppBarTheme(
     backgroundColor: Colors.white,
-    foregroundColor: AppConstants.secondaryColor,
+    foregroundColor: Color(0xFF1A1F36),
     elevation: 0,
     centerTitle: false,
     surfaceTintColor: Colors.transparent,

@@ -8,6 +8,7 @@ import 'package:lowgo_cab/services/contact_service.dart';
 import 'package:lowgo_cab/views/home_page.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:lowgo_cab/services/booking_service.dart';
+import 'dart:ui';
 
 class ContactPage extends StatefulWidget {
   const ContactPage({super.key});
@@ -153,17 +154,17 @@ class _ContactPageState extends State<ContactPage>
   Widget build(BuildContext context) {
     final isMobile = ResponsiveLayout.isMobile(context);
     return Scaffold(
-      backgroundColor: Colors.white,
-      appBar: const CustomHeader(),
-      endDrawer: _buildDrawer(context),
+      backgroundColor: AppConstants.backgroundColor,
+      appBar: const CustomHeader(currentPage: 'contact'),
       body: SingleChildScrollView(
+        physics: const BouncingScrollPhysics(),
         child: Column(
           children: [
-            _buildPremiumHero(isMobile),
+            _buildHeroSection(isMobile),
             Padding(
               padding: EdgeInsets.symmetric(
                 horizontal: isMobile ? 16 : 24,
-                vertical: isMobile ? 40 : 80,
+                vertical: isMobile ? 40 : 60,
               ),
               child: Center(
                 child: Container(
@@ -172,11 +173,11 @@ class _ContactPageState extends State<ContactPage>
                     mobile: Column(
                       children: [
                         _fadeIn(
-                          child: _buildContactInfo(),
+                          child: _buildContactCards(),
                           controller: _contentController,
                           delay: 0.1,
                         ),
-                        const SizedBox(height: 60),
+                        const SizedBox(height: 30),
                         _fadeIn(
                           child: _buildContactForm(isMobile),
                           controller: _contentController,
@@ -188,16 +189,16 @@ class _ContactPageState extends State<ContactPage>
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Expanded(
-                          flex: 4,
+                          flex: 3,
                           child: _fadeIn(
-                            child: _buildContactInfo(),
+                            child: _buildContactCards(),
                             controller: _contentController,
                             delay: 0.1,
                           ),
                         ),
-                        const SizedBox(width: 80),
+                        const SizedBox(width: 40),
                         Expanded(
-                          flex: 6,
+                          flex: 5,
                           child: _fadeIn(
                             child: _buildContactForm(isMobile),
                             controller: _contentController,
@@ -210,6 +211,8 @@ class _ContactPageState extends State<ContactPage>
                 ),
               ),
             ),
+            _buildMapSection(isMobile),
+            _buildFAQSection(isMobile),
             const CustomFooter(),
           ],
         ),
@@ -224,7 +227,7 @@ class _ContactPageState extends State<ContactPage>
   }) {
     final animation = CurvedAnimation(
       parent: controller,
-      curve: Interval(delay, 1.0, curve: Curves.easeOut),
+      curve: Interval(delay, 1.0, curve: Curves.easeOutCubic),
     );
     return FadeTransition(
       opacity: animation,
@@ -238,285 +241,132 @@ class _ContactPageState extends State<ContactPage>
     );
   }
 
-  Widget _buildPremiumHero(bool isMobile) {
+  Widget _buildHeroSection(bool isMobile) {
     return Container(
       width: double.infinity,
-      height: isMobile ? 300 : 450,
+      padding: const EdgeInsets.symmetric(vertical: 60, horizontal: 24),
       decoration: const BoxDecoration(
-        image: DecorationImage(
-          image: NetworkImage(
-            'https://images.unsplash.com/photo-1449156001931-82832044e131?w=1600',
-          ),
-          fit: BoxFit.cover,
-        ),
-      ),
-      child: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: [
-              Colors.black.withOpacity(0.8),
-              Colors.black.withOpacity(0.4),
-            ],
-            begin: Alignment.bottomCenter,
-            end: Alignment.topCenter,
-          ),
-        ),
-        child: Center(
-          child: _fadeIn(
-            controller: _headerController,
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 20,
-                    vertical: 8,
-                  ),
-                  decoration: BoxDecoration(
-                    color: AppConstants.primaryColor.withOpacity(0.2),
-                    borderRadius: BorderRadius.circular(40),
-                    border: Border.all(
-                      color: AppConstants.primaryColor.withOpacity(0.5),
-                    ),
-                  ),
-                  child: const Text(
-                    'WE\'RE HERE FOR YOU',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                      letterSpacing: 2,
-                      fontSize: 10,
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 24),
-                Text(
-                  'Contact Us',
-                  style: TextStyle(
-                    fontSize: isMobile ? 40 : 72,
-                    fontWeight: FontWeight.w900,
-                    color: Colors.white,
-                    letterSpacing: -1,
-                  ),
-                ),
-                const SizedBox(height: 16),
-                Text(
-                  'Your comfort and satisfaction are our top priorities.',
-                  style: TextStyle(
-                    color: Colors.white70,
-                    fontSize: isMobile ? 16 : 20,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildContactInfo() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Text(
-          'GET IN TOUCH',
-          style: TextStyle(
-            color: AppConstants.primaryColor,
-            fontWeight: FontWeight.bold,
-            letterSpacing: 2,
-            fontSize: 13,
-          ),
-        ),
-        const SizedBox(height: 16),
-        const Text(
-          'Visit Our Office or Contact Us Anytime',
-          style: TextStyle(
-            fontSize: 32,
-            fontWeight: FontWeight.w900,
-            height: 1.2,
-          ),
-        ),
-        const SizedBox(height: 48),
-        _contactItem(
-          Icons.location_on_outlined,
-          'HEAD OFFICE',
-          'Pratap Nagar, Jaipur, Rajasthan',
-        ),
-        const SizedBox(height: 32),
-        _contactItem(
-          Icons.phone_outlined,
-          'PHONE NUMBER',
-          AppConstants.whatsappNumber,
-        ),
-        const SizedBox(height: 32),
-        _contactItem(
-          Icons.email_outlined,
-          'EMAIL ADDRESS',
-          AppConstants.displayEmail,
-        ),
-        const SizedBox(height: 48),
-        const Text(
-          'FOLLOW US',
-          style: TextStyle(
-            fontWeight: FontWeight.bold,
-            letterSpacing: 1.5,
-            fontSize: 12,
-            color: Colors.grey,
-          ),
-        ),
-        const SizedBox(height: 20),
-        Row(
-          children: [
-            _socialButton(FontAwesomeIcons.facebook, () {}),
-            _socialButton(
-              FontAwesomeIcons.instagram,
-              () => launchUrl(Uri.parse(AppConstants.instagramUrl)),
-            ),
-            _socialButton(
-              FontAwesomeIcons.whatsapp,
-              () => launchUrl(
-                Uri.parse(
-                  'https://wa.me/${AppConstants.whatsappNumber.replaceAll('+', '').replaceAll(' ', '')}',
-                ),
-              ),
-            ),
+        gradient: LinearGradient(
+          colors: [
+            Color(0xFF0D8BFF),
+            Color(0xFF00A8E8),
+            Color(0xFF00C853),
           ],
+          begin: Alignment.centerLeft,
+          end: Alignment.centerRight,
         ),
-      ],
-    );
-  }
-
-  Widget _contactItem(IconData icon, String title, String value) {
-    return Row(
-      children: [
-        Container(
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: AppConstants.primaryColor.withOpacity(0.05),
-            borderRadius: BorderRadius.circular(16),
-          ),
-          child: Icon(icon, color: AppConstants.primaryColor, size: 28),
-        ),
-        const SizedBox(width: 24),
-        Expanded(
+      ),
+      child: Center(
+        child: Container(
+          constraints: const BoxConstraints(maxWidth: 800),
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                title,
-                style: const TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 11,
-                  color: Colors.grey,
-                  letterSpacing: 1,
+                'Get In Touch',
+                style: TextStyle(
+                  fontSize: isMobile ? 32 : 42,
+                  fontWeight: FontWeight.w800,
+                  color: Colors.white,
                 ),
               ),
-              const SizedBox(height: 4),
+              const SizedBox(height: 12),
               Text(
-                value,
-                style: const TextStyle(
-                  fontWeight: FontWeight.w800,
-                  fontSize: 18,
+                'Have questions? We\'d love to hear from you. Send us a message and we\'ll respond as soon as possible.',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 16,
+                  color: Colors.white.withOpacity(0.9),
                 ),
               ),
             ],
           ),
         ),
-      ],
-    );
-  }
-
-  Widget _socialButton(IconData icon, VoidCallback onPressed) {
-    return InkWell(
-      onTap: onPressed,
-      borderRadius: BorderRadius.circular(12),
-      child: Container(
-        margin: const EdgeInsets.only(right: 12),
-        padding: const EdgeInsets.all(14),
-        decoration: BoxDecoration(
-          border: Border.all(color: Colors.grey.withOpacity(0.2)),
-          borderRadius: BorderRadius.circular(12),
-        ),
-        child: FaIcon(icon, size: 20, color: AppConstants.secondaryColor),
       ),
     );
   }
 
-  Widget _buildContactForm(bool isMobile) {
+  Widget _buildContactCards() {
+    return Column(
+      children: [
+        _contactCard(
+          Icons.phone_outlined,
+          Colors.blue,
+          'Phone',
+          'Call us for immediate support',
+          '+1 (555) 123-4567',
+        ),
+        const SizedBox(height: 20),
+        _contactCard(
+          Icons.email_outlined,
+          Colors.green,
+          'Email',
+          'Send us an email anytime',
+          'info@travelexplore.com',
+        ),
+        const SizedBox(height: 20),
+        _contactCard(
+          Icons.location_on_outlined,
+          Colors.purple,
+          'Office',
+          'Visit us at our location',
+          '123 Travel Street\nNew York, NY 10001\nUnited States',
+        ),
+        const SizedBox(height: 20),
+        _workingHoursCard(),
+      ],
+    );
+  }
+
+  Widget _contactCard(IconData icon, Color color, String title, String subtitle, String value) {
     return Container(
-      padding: EdgeInsets.all(isMobile ? 24 : 48),
+      width: double.infinity,
+      padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(32),
+        borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.05),
-            blurRadius: 40,
-            offset: const Offset(0, 10),
+            blurRadius: 15,
+            offset: const Offset(0, 5),
           ),
         ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            'SEND MESSAGE',
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: color.withOpacity(0.1),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(icon, color: color, size: 24),
+          ),
+          const SizedBox(height: 16),
+          Text(
+            title,
+            style: const TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.w700,
+              color: Color(0xFF1A1F36),
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            subtitle,
             style: TextStyle(
-              color: AppConstants.primaryColor,
-              fontWeight: FontWeight.bold,
-              letterSpacing: 1.5,
-              fontSize: 12,
+              fontSize: 13,
+              color: Colors.grey[600],
             ),
           ),
           const SizedBox(height: 12),
-          const Text(
-            'Reach Out to Us',
-            style: TextStyle(fontSize: 28, fontWeight: FontWeight.w900),
-          ),
-          const SizedBox(height: 32),
-          _premiumField('Full Name', Icons.person_outline, _nameController),
-          const SizedBox(height: 24),
-          _premiumField(
-            'Email Address',
-            Icons.email_outlined,
-            _emailController,
-          ),
-          const SizedBox(height: 24),
-          _premiumField(
-            'Phone Number',
-            Icons.phone_android_outlined,
-            _phoneController,
-          ),
-          const SizedBox(height: 24),
-          _premiumField(
-            'Your Message',
-            Icons.chat_bubble_outline,
-            _messageController,
-            maxLines: 4,
-          ),
-          const SizedBox(height: 48),
-          SizedBox(
-            width: double.infinity,
-            height: 64,
-            child: ElevatedButton(
-              onPressed: _isSubmitting ? null : _handleSubmission,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppConstants.secondaryColor,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16),
-                ),
-              ),
-              child: _isSubmitting
-                  ? const CircularProgressIndicator(color: Colors.white)
-                  : const Text(
-                      'SUBMIT NOW',
-                      style: TextStyle(
-                        fontWeight: FontWeight.w900,
-                        letterSpacing: 1.5,
-                        fontSize: 15,
-                      ),
-                    ),
+          Text(
+            value,
+            style: TextStyle(
+              fontSize: 15,
+              fontWeight: FontWeight.w600,
+              color: AppConstants.primaryColor,
             ),
           ),
         ],
@@ -524,81 +374,485 @@ class _ContactPageState extends State<ContactPage>
     );
   }
 
-  Widget _premiumField(
-    String label,
-    IconData icon,
-    TextEditingController controller, {
-    int maxLines = 1,
-  }) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          label.toUpperCase(),
-          style: const TextStyle(
-            fontWeight: FontWeight.bold,
-            fontSize: 10,
-            color: Colors.grey,
-            letterSpacing: 1,
+  Widget _workingHoursCard() {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 15,
+            offset: const Offset(0, 5),
           ),
-        ),
-        const SizedBox(height: 8),
-        TextField(
-          controller: controller,
-          maxLines: maxLines,
-          style: const TextStyle(fontWeight: FontWeight.bold),
-          decoration: InputDecoration(
-            prefixIcon: Icon(icon, color: AppConstants.primaryColor, size: 20),
-            fillColor: Colors.grey.withOpacity(0.04),
-            filled: true,
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(16),
-              borderSide: BorderSide.none,
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: Colors.orange.withOpacity(0.1),
+              shape: BoxShape.circle,
             ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(16),
-              borderSide: const BorderSide(
-                color: AppConstants.primaryColor,
-                width: 2,
-              ),
+            child: const Icon(Icons.access_time, color: Colors.orange, size: 24),
+          ),
+          const SizedBox(height: 16),
+          const Text(
+            'Working Hours',
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.w700,
+              color: Color(0xFF1A1F36),
             ),
           ),
-        ),
-      ],
+          const SizedBox(height: 12),
+          _hoursRow('Monday - Friday:', '9:00 AM - 6:00 PM'),
+          _hoursRow('Saturday:', '10:00 AM - 4:00 PM'),
+          _hoursRow('Sunday:', 'Closed'),
+          const SizedBox(height: 12),
+          Text(
+            '24/7 Emergency Support',
+            style: TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+              color: Colors.green[600],
+            ),
+          ),
+        ],
+      ),
     );
   }
 
-  Widget _buildDrawer(BuildContext context) {
-    return Drawer(
-      child: ListView(
-        padding: EdgeInsets.zero,
+  Widget _hoursRow(String day, String hours) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 6),
+      child: Row(
         children: [
-          const DrawerHeader(
-            decoration: BoxDecoration(gradient: AppConstants.primaryGradient),
+          Text(
+            day,
+            style: TextStyle(
+              fontSize: 13,
+              color: Colors.grey[600],
+            ),
+          ),
+          const SizedBox(width: 8),
+          Text(
+            hours,
+            style: const TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.w500,
+              color: Color(0xFF1A1F36),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildContactForm(bool isMobile) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.08),
+            blurRadius: 30,
+            offset: const Offset(0, 10),
+          ),
+        ],
+      ),
+      child: Column(
+        children: [
+          // Header
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+            decoration: BoxDecoration(
+              gradient: AppConstants.primaryGradient,
+              borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+            ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisAlignment: MainAxisAlignment.end,
               children: [
-                Text(
-                  'LOWGO CAB',
+                const Text(
+                  'Send Us a Message',
                   style: TextStyle(
                     color: Colors.white,
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold,
+                    fontSize: 20,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  'Fill out the form below and we\'ll get back to you shortly',
+                  style: TextStyle(
+                    color: Colors.white.withOpacity(0.9),
+                    fontSize: 13,
                   ),
                 ),
               ],
             ),
           ),
+          // Form Fields
+          Padding(
+            padding: EdgeInsets.all(isMobile ? 20 : 30),
+            child: Column(
+              children: [
+                Row(
+                  children: [
+                    Expanded(
+                      child: _formField('Full Name *', _nameController),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: _formField('Email Address *', _emailController),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 20),
+                _formField('Phone Number', _phoneController),
+                const SizedBox(height: 20),
+                TextFormField(
+                  controller: _messageController,
+                  maxLines: 4,
+                  decoration: InputDecoration(
+                    labelText: 'Your Message *',
+                    labelStyle: TextStyle(color: Colors.grey[600], fontSize: 14),
+                    hintText: 'Tell us how we can help you...',
+                    hintStyle: TextStyle(color: Colors.grey[400], fontSize: 14),
+                    filled: true,
+                    fillColor: Colors.grey[50],
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10),
+                      borderSide: BorderSide(color: Colors.grey[200]!),
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10),
+                      borderSide: BorderSide(color: Colors.grey[200]!),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10),
+                      borderSide: BorderSide(color: AppConstants.primaryColor, width: 2),
+                    ),
+                    contentPadding: const EdgeInsets.all(16),
+                  ),
+                ),
+                const SizedBox(height: 24),
+                SizedBox(
+                  width: double.infinity,
+                  height: 50,
+                  child: ElevatedButton.icon(
+                    onPressed: _isSubmitting ? null : _handleSubmission,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppConstants.primaryColor,
+                      foregroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      elevation: 0,
+                    ),
+                    icon: const Icon(Icons.send, size: 18),
+                    label: _isSubmitting
+                        ? const SizedBox(
+                            height: 20,
+                            width: 20,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: Colors.white,
+                            ),
+                          )
+                        : const Text(
+                            'Send Message',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _formField(String label, TextEditingController controller) {
+    return TextFormField(
+      controller: controller,
+      decoration: InputDecoration(
+        labelText: label,
+        labelStyle: TextStyle(color: Colors.grey[600], fontSize: 14),
+        filled: true,
+        fillColor: Colors.grey[50],
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(10),
+          borderSide: BorderSide(color: Colors.grey[200]!),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(10),
+          borderSide: BorderSide(color: Colors.grey[200]!),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(10),
+          borderSide: BorderSide(color: AppConstants.primaryColor, width: 2),
+        ),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      ),
+    );
+  }
+
+  Widget _buildMapSection(bool isMobile) {
+    return Container(
+      width: double.infinity,
+      color: Colors.white,
+      padding: const EdgeInsets.symmetric(vertical: 60, horizontal: 24),
+      child: Center(
+        child: Container(
+          constraints: const BoxConstraints(maxWidth: 1100),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                'Find Us on Map',
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.w700,
+                  color: Color(0xFF1A1F36),
+                ),
+              ),
+              const SizedBox(height: 20),
+              Container(
+                height: 300,
+                decoration: BoxDecoration(
+                  color: Colors.grey[100],
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: Colors.grey[200]!),
+                ),
+                child: Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        Icons.location_on,
+                        size: 60,
+                        color: AppConstants.primaryColor,
+                      ),
+                      const SizedBox(height: 16),
+                      const Text(
+                        '123 Travel Street',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      Text(
+                        'New York, NY 10001',
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: Colors.grey[600],
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      ElevatedButton.icon(
+                        onPressed: () {},
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppConstants.primaryColor,
+                          foregroundColor: Colors.white,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                        ),
+                        icon: const Icon(Icons.map, size: 16),
+                        label: const Text('View on Google Maps'),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildFAQSection(bool isMobile) {
+    final faqs = [
+      {
+        'question': 'How do I book a package?',
+        'answer': 'Simply browse our packages, select your preferred destination, choose the number of travelers and date, then fill out the booking form. We\'ll confirm your reservation within 24 hours.',
+      },
+      {
+        'question': 'What payment methods do you accept?',
+        'answer': 'We accept all major credit cards, debit cards, and bank transfers. Payment can be made in full or through our installment plans.',
+      },
+      {
+        'question': 'Can I cancel my booking?',
+        'answer': 'Yes, we offer free cancellation up to 7 days before departure. Cancellations made within 7 days may be subject to fees. Please review our cancellation policy for details.',
+      },
+      {
+        'question': 'Do you provide travel insurance?',
+        'answer': 'Yes, all our packages include basic travel insurance. Additional comprehensive coverage can be purchased during the booking process.',
+      },
+    ];
+
+    return Container(
+      width: double.infinity,
+      color: Colors.grey[50],
+      padding: const EdgeInsets.symmetric(vertical: 60, horizontal: 24),
+      child: Center(
+        child: Container(
+          constraints: const BoxConstraints(maxWidth: 900),
+          child: Column(
+            children: [
+              Text(
+                'Frequently Asked Questions',
+                style: TextStyle(
+                  fontSize: isMobile ? 24 : 32,
+                  fontWeight: FontWeight.w800,
+                  color: const Color(0xFF1A1F36),
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'Quick answers to common questions',
+                style: TextStyle(
+                  fontSize: 16,
+                  color: Colors.grey[600],
+                ),
+              ),
+              const SizedBox(height: 40),
+              ResponsiveLayout(
+                mobile: Column(
+                  children: faqs.map((f) => Padding(
+                    padding: const EdgeInsets.only(bottom: 16),
+                    child: _faqCard(f['question']!, f['answer']!),
+                  )).toList(),
+                ),
+                desktop: Column(
+                  children: [
+                    Row(
+                      children: [
+                        Expanded(child: _faqCard(faqs[0]['question']!, faqs[0]['answer']!)),
+                        const SizedBox(width: 20),
+                        Expanded(child: _faqCard(faqs[1]['question']!, faqs[1]['answer']!)),
+                      ],
+                    ),
+                    const SizedBox(height: 20),
+                    Row(
+                      children: [
+                        Expanded(child: _faqCard(faqs[2]['question']!, faqs[2]['answer']!)),
+                        const SizedBox(width: 20),
+                        Expanded(child: _faqCard(faqs[3]['question']!, faqs[3]['answer']!)),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _faqCard(String question, String answer) {
+    return Container(
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.grey[200]!),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            question,
+            style: const TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w700,
+              color: Color(0xFF1A1F36),
+            ),
+          ),
+          const SizedBox(height: 12),
+          Text(
+            answer,
+            style: TextStyle(
+              fontSize: 14,
+              color: Colors.grey[600],
+              height: 1.5,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDrawer(BuildContext context) {
+    return Drawer(
+      backgroundColor: const Color(0xFF1A1F36),
+      child: ListView(
+        padding: EdgeInsets.zero,
+        children: [
+          DrawerHeader(
+            decoration: const BoxDecoration(gradient: AppConstants.primaryGradient),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Icon(Icons.flight_takeoff, color: AppConstants.primaryColor, size: 20),
+                    ),
+                    const SizedBox(width: 12),
+                    const Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'TravelExplore',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 20,
+                            fontWeight: FontWeight.w800,
+                          ),
+                        ),
+                        Text(
+                          'Your Journey Begins',
+                          style: TextStyle(
+                            color: Colors.white70,
+                            fontSize: 12,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
           ListTile(
-            title: const Text('HOME'),
+            title: const Text('Home', style: TextStyle(color: Colors.white)),
             onTap: () => Navigator.pushReplacement(
               context,
               MaterialPageRoute(builder: (context) => const HomePage()),
             ),
           ),
           ListTile(
-            title: const Text('CONTACT US'),
+            title: const Text('Contact', style: TextStyle(color: Colors.white)),
             onTap: () => Navigator.pop(context),
           ),
         ],

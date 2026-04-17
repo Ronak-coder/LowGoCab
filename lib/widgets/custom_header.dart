@@ -2,209 +2,194 @@ import 'package:flutter/material.dart';
 import 'package:lowgo_cab/utils/constants.dart';
 import 'package:lowgo_cab/views/home_page.dart';
 import 'package:lowgo_cab/views/packages_page.dart';
-import 'package:lowgo_cab/views/about_page.dart';
 import 'package:lowgo_cab/views/contact_page.dart';
 import 'package:lowgo_cab/views/feedback_page.dart';
 import 'package:lowgo_cab/views/booking_page.dart';
 import 'package:lowgo_cab/widgets/responsive_layout.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:url_launcher/url_launcher.dart';
 
 class CustomHeader extends StatelessWidget implements PreferredSizeWidget {
-  const CustomHeader({super.key});
+  final String? currentPage;
+  const CustomHeader({super.key, this.currentPage});
 
   @override
-  Size get preferredSize => const Size.fromHeight(120); // Taller for dual bar
+  Size get preferredSize => const Size.fromHeight(70);
 
   @override
   Widget build(BuildContext context) {
     final isMobile = ResponsiveLayout.isMobile(context);
 
-    return Column(
-      children: [
-        // Top Bar (Magenta)
-        Container(
-          height: isMobile ? 40 : 50,
-          color: AppConstants.topBarColor,
-          padding: const EdgeInsets.symmetric(horizontal: 24),
-          child: Center(
-            child: Container(
-              constraints: const BoxConstraints(maxWidth: 1200),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Row(
-                    children: [
-                      const Icon(Icons.email, color: Colors.white, size: 16),
-                      const SizedBox(width: 8),
-                      const Text(
-                        AppConstants.displayEmail,
-                        style: TextStyle(color: Colors.white, fontSize: 12),
-                      ),
-                      if (!isMobile) ...[
-                        const SizedBox(width: 24),
-                        const Icon(Icons.phone, color: Colors.white, size: 16),
-                        const SizedBox(width: 8),
-                        const Text(
-                          AppConstants.whatsappNumber,
-                          style: TextStyle(color: Colors.white, fontSize: 12),
-                        ),
-                      ],
-                    ],
-                  ),
-                  Row(
-                    children: [
-                      _socialIcon(
-                        FontAwesomeIcons.instagram,
-                        () => launchUrl(Uri.parse(AppConstants.instagramUrl)),
-                      ),
-                      _socialIcon(
-                        FontAwesomeIcons.whatsapp,
-                        () => launchUrl(
-                          Uri.parse(
-                            'https://wa.me/${AppConstants.whatsappNumber.replaceAll('+', '').replaceAll(' ', '')}',
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
+    return Container(
+      height: 70,
+      decoration: BoxDecoration(
+        color: Colors.white,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 2),
           ),
-        ),
-        // Main Header
-        Container(
-          height: isMobile ? 60 : 70,
-          color: Colors.white,
-          padding: const EdgeInsets.symmetric(horizontal: 24),
-          child: Center(
-            child: Container(
-              constraints: const BoxConstraints(maxWidth: 1200),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  // Logo
-                  GestureDetector(
-                    onTap: () {
-                      // Navigate to home and remove all previous routes
-                      Navigator.of(context).pushAndRemoveUntil(
-                        MaterialPageRoute(
-                          builder: (context) => const HomePage(),
+        ],
+      ),
+      padding: const EdgeInsets.symmetric(horizontal: 24),
+      child: Center(
+        child: Container(
+          constraints: const BoxConstraints(maxWidth: 1200),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              // Logo
+              MouseRegion(
+                cursor: SystemMouseCursors.click,
+                child: GestureDetector(
+                  onTap: () => _navigateTo(context, const HomePage()),
+                  child: Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          gradient: AppConstants.blueGradient,
+                          borderRadius: BorderRadius.circular(10),
                         ),
-                        (route) => false,
-                      );
-                    },
-                    child: Image.asset(
-                      'assets/logo.png',
-                      height: isMobile ? 45 : 55,
-                      fit: BoxFit.contain,
-                      errorBuilder: (context, error, stackTrace) => Row(
+                        child: const Icon(
+                          Icons.flight_takeoff,
+                          size: 20,
+                          color: Colors.white,
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisSize: MainAxisSize.min,
                         children: [
-                          const Icon(
-                            Icons.local_taxi,
-                            size: 32,
-                            color: AppConstants.primaryColor,
-                          ),
-                          const SizedBox(width: 10),
                           Text(
-                            'LOWGO CAB',
+                            'TravelExplore',
                             style: TextStyle(
-                              fontSize: isMobile ? 20 : 26,
-                              fontWeight: FontWeight.w900,
-                              color: AppConstants.secondaryColor,
-                              letterSpacing: 1.5,
+                              fontSize: isMobile ? 16 : 18,
+                              fontWeight: FontWeight.w800,
+                              color: const Color(0xFF1A1F36),
+                              letterSpacing: -0.5,
+                            ),
+                          ),
+                          Text(
+                            'Your Journey Begins',
+                            style: TextStyle(
+                              fontSize: isMobile ? 9 : 10,
+                              color: Colors.grey[600],
+                              fontWeight: FontWeight.w500,
                             ),
                           ),
                         ],
                       ),
-                    ),
+                    ],
                   ),
-
-                  if (!isMobile)
-                    Row(
-                      children: [
-                        _buildNavLink(context, 'HOME', const HomePage()),
-                        _buildNavLink(context, 'ABOUT US', const AboutPage()),
-                        _buildNavLink(
-                          context,
-                          'PACKAGES',
-                          const PackagesPage(),
-                        ),
-                        _buildNavLink(
-                          context,
-                          'CONTACT US',
-                          const ContactPage(),
-                        ),
-                        _buildNavLink(
-                          context,
-                          'FEEDBACK',
-                          const FeedbackPage(),
-                        ),
-                        const SizedBox(width: 12),
-                        ElevatedButton(
-                          onPressed: () => Navigator.pushReplacement(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => const BookingPage(),
-                            ),
-                          ),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: AppConstants.primaryColor,
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 20,
-                              vertical: 12,
-                            ),
-                          ),
-                          child: const Text(
-                            'ENQUIRY NOW',
-                            style: TextStyle(fontWeight: FontWeight.bold),
-                          ),
-                        ),
-                      ],
-                    )
-                  else
-                    Builder(
-                      builder: (context) => IconButton(
-                        icon: const Icon(
-                          Icons.menu,
-                          color: AppConstants.secondaryColor,
-                          size: 28,
-                        ),
-                        onPressed: () => Scaffold.of(context).openEndDrawer(),
-                      ),
-                    ),
-                ],
+                ),
               ),
-            ),
+
+              if (!isMobile)
+                Row(
+                  children: [
+                    _NavPill(
+                      title: 'Home',
+                      page: const HomePage(),
+                      isActive: currentPage == 'home',
+                    ),
+                    _NavPill(
+                      title: 'Packages',
+                      page: const PackagesPage(),
+                      isActive: currentPage == 'packages',
+                    ),
+                    _NavPill(
+                      title: 'Cab Booking',
+                      page: const BookingPage(),
+                      isActive: currentPage == 'booking',
+                    ),
+                    _NavPill(
+                      title: 'Contact',
+                      page: const ContactPage(),
+                      isActive: currentPage == 'contact',
+                    ),
+                    _NavPill(
+                      title: 'Feedback',
+                      page: const FeedbackPage(),
+                      isActive: currentPage == 'feedback',
+                    ),
+                  ],
+                )
+              else
+                Builder(
+                  builder: (context) => IconButton(
+                    icon: const Icon(
+                      Icons.menu_rounded,
+                      color: Color(0xFF1A1F36),
+                      size: 26,
+                    ),
+                    onPressed: () => Scaffold.of(context).openEndDrawer(),
+                  ),
+                ),
+            ],
           ),
         ),
-      ],
-    );
-  }
-
-  Widget _socialIcon(IconData icon, VoidCallback onTap) {
-    return Padding(
-      padding: const EdgeInsets.only(left: 16),
-      child: InkWell(
-        onTap: onTap,
-        child: FaIcon(icon, color: Colors.white, size: 16),
       ),
     );
   }
 
-  Widget _buildNavLink(BuildContext context, String title, Widget page) {
-    return TextButton(
-      onPressed: () => Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => page),
-      ),
-      child: Text(
-        title,
-        style: const TextStyle(
-          color: AppConstants.secondaryColor,
-          fontWeight: FontWeight.bold,
-          fontSize: 14,
+  void _navigateTo(BuildContext context, Widget page) {
+    Navigator.of(context).pushAndRemoveUntil(
+      MaterialPageRoute(builder: (context) => page),
+      (route) => false,
+    );
+  }
+}
+
+/// Navigation pill with gradient active state
+class _NavPill extends StatefulWidget {
+  final String title;
+  final Widget page;
+  final bool isActive;
+
+  const _NavPill({
+    required this.title,
+    required this.page,
+    this.isActive = false,
+  });
+
+  @override
+  State<_NavPill> createState() => _NavPillState();
+}
+
+class _NavPillState extends State<_NavPill> {
+  bool _isHovered = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return MouseRegion(
+      cursor: SystemMouseCursors.click,
+      onEnter: (_) => setState(() => _isHovered = true),
+      onExit: (_) => setState(() => _isHovered = false),
+      child: GestureDetector(
+        onTap: () => Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => widget.page),
+        ),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
+          margin: const EdgeInsets.symmetric(horizontal: 4),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          decoration: BoxDecoration(
+            gradient: widget.isActive ? AppConstants.primaryGradient : null,
+            color: widget.isActive ? null : (_isHovered ? Colors.grey[100] : Colors.transparent),
+            borderRadius: BorderRadius.circular(20),
+          ),
+          child: Text(
+            widget.title,
+            style: TextStyle(
+              color: widget.isActive
+                  ? Colors.white
+                  : (_isHovered ? AppConstants.primaryColor : const Color(0xFF1A1F36)),
+              fontWeight: widget.isActive ? FontWeight.w600 : FontWeight.w500,
+              fontSize: 14,
+            ),
+          ),
         ),
       ),
     );

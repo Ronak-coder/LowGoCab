@@ -1,13 +1,12 @@
 import 'dart:convert';
-import 'dart:js_interop';
-import 'package:web/web.dart' as web;
+import 'package:http/http.dart' as http;
 import 'package:url_launcher/url_launcher.dart';
 import 'package:lowgo_cab/utils/constants.dart';
 import 'package:lowgo_cab/models/booking_model.dart';
 
 class ContactService {
   // ─────────────────────────────────────────────────────────────────────────
-  // CORE SEND METHOD — sends two separate XHR requests (admin + customer)
+  // CORE SEND METHOD — sends two separate HTTP POST requests (admin + customer)
   // ─────────────────────────────────────────────────────────────────────────
   static Future<void> _sendEmail({
     required String adminSubject,
@@ -21,7 +20,7 @@ class ContactService {
     if (scriptUrl.contains('REPLACE')) throw 'URL not configured';
 
     // ── 1. Admin Notification ──────────────────────────────────────────────
-    _xhrPost(scriptUrl, {
+    await _httpPost(scriptUrl, {
       'to': AppConstants.contactEmail,
       'subject': adminSubject,
       'body': adminBody,
@@ -31,7 +30,7 @@ class ContactService {
     // ── 2. Customer Auto-Reply ─────────────────────────────────────────────
     if (customerEmail != null && customerEmail.trim().isNotEmpty) {
       await Future.delayed(const Duration(milliseconds: 300));
-      _xhrPost(scriptUrl, {
+      await _httpPost(scriptUrl, {
         'to': customerEmail,
         'subject': customerSubject ?? 'Thank you - LowGo Cab',
         'body': customerBody ?? '<p>Thank you for contacting LowGo Cab!</p>',
@@ -42,12 +41,17 @@ class ContactService {
     await Future.delayed(const Duration(milliseconds: 200));
   }
 
-  /// Fires an XMLHttpRequest POST with JSON payload via JS interop.
-  static void _xhrPost(String url, Map<String, dynamic> payload) {
-    final String payloadJson = json.encode(payload);
-    final xhr = web.XMLHttpRequest();
-    xhr.open('POST', url, true);
-    xhr.send(payloadJson.toJS);
+  /// Fires a cross-platform HTTP POST with JSON payload.
+  static Future<void> _httpPost(String url, Map<String, dynamic> payload) async {
+    try {
+      await http.post(
+        Uri.parse(url),
+        headers: {'Content-Type': 'application/json'},
+        body: json.encode(payload),
+      );
+    } catch (_) {
+      // Fire-and-forget — ignore errors silently
+    }
   }
 
   // ─────────────────────────────────────────────────────────────────────────
